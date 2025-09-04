@@ -32,8 +32,8 @@ import logging
 from google.adk.agents.readonly_context import ReadonlyContext
 from dotenv import load_dotenv
 
-from adk_agent.logging_config import log_level
-from adk_agent.prompts import get_agent_description, get_agent_instruction
+from .logging_config import log_level
+from .prompts import get_agent_description, get_agent_instruction
 
 load_dotenv()
 

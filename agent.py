@@ -24,7 +24,7 @@ import os
 from google.adk.agents.llm_agent import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 
-from adk_agent.config import settings
+from .config import settings
 
 # Main agent instance configuration
 # This agent will be automatically discovered and executed by the ADK framework
