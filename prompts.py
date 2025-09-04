@@ -8,7 +8,7 @@ for different agent types and use cases.
 Functions:
     get_agent_instruction(context): Returns the main system instruction/prompt
     get_agent_description(): Returns a brief description of the agent's purpose
-    
+
 Notes:
     - Instructions can be overridden via AGENT_INSTRUCTION environment variable
     - Descriptions can be overridden via AGENT_DESCRIPTION environment variable
@@ -28,16 +28,16 @@ logger = logging.getLogger(__name__)
 def get_agent_instruction(context: ReadonlyContext) -> str:
     """
     Returns the system instruction/prompt for the agent.
-    
+
     This function provides the core behavioral template for agents. Customize this
     template based on your specific agent's role, capabilities, and use case.
-    
+
     Args:
         context (ReadonlyContext): Runtime context containing state and user information
-        
+
     Returns:
         str: Complete system instruction for the agent
-        
+
     Environment Variables:
         AGENT_INSTRUCTION: Override default instruction with custom prompt
     """
@@ -186,16 +186,16 @@ def get_agent_instruction(context: ReadonlyContext) -> str:
 def get_agent_description() -> str:
     """
     Returns a concise description of the agent's purpose and capabilities.
-    
+
     This should be a brief, clear summary that can be used in agent registries,
     documentation, or when the agent introduces itself to other agents.
-    
+
     Returns:
         str: Brief description of the agent's role and capabilities
-        
+
     Environment Variables:
         AGENT_DESCRIPTION: Override default description with custom text
-        
+
     Template Guidelines:
         - Keep to 1-3 sentences
         - Focus on primary function and key capabilities
@@ -211,6 +211,6 @@ def get_agent_description() -> str:
         Specializes in [domain expertise] with focus on [specific capabilities or outcomes].
         """
     ).strip()
-    
+
     configured_description = os.getenv("AGENT_DESCRIPTION", default_description)
     return configured_description

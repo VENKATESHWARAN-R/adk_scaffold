@@ -31,25 +31,21 @@ from adk_agent.config import settings
 root_agent = LlmAgent(
     # Agent identification
     name="adk_agent",  # TODO: Replace with actual agent name during scaffolding
-    
     # Model configuration - supports both direct model and LiteLLM proxy
     model=settings.model_id
     if os.getenv("USE_LITELLM_PROXY") != "True"
     else LiteLlm(settings.model_id),
-    
     # Agent behavior configuration
     description=settings.agent_description,
     instruction=settings.agent_instruction,
-    
     # Tools and capabilities (customize based on agent requirements)
     tools=[
         # TODO: Add agent-specific tools here
         # Example: google_search_tool, file_operations_tool, etc.
     ],
-    
     # Sub-agents (for multi-agent workflows)
     sub_agents=[
         # TODO: Add sub-agents if needed for complex workflows
         # Example: specialist agents for specific tasks
-    ]
+    ],
 )

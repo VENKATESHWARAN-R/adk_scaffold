@@ -4,119 +4,79 @@ A comprehensive scaffold template for creating ADK (Agent Development Kit) based
 
 ## 🚀 Quick Setup
 
-Add this function to your `~/.zshrc` or `~/.bashrc`:
+### Method 1: One-liner Install (Easiest)
 
 ```bash
-adk_scaffold() {
-    if [ -z "$1" ]; then
-        echo "Usage: adk_scaffold <agent_name> [target_directory]"
-        return 1
-    fi
-    
-    local agent_name="$1"
-    local target_dir="${2:-.}"
-    local temp_dir=$(mktemp -d)
-    
-    echo "🚀 Fetching latest scaffold template..."
-    git clone https://github.com/VENKATESHWARAN-R/adk_scaffold.git "$temp_dir" --quiet
-    
-    echo "📦 Setting up agent: $agent_name"
-    
-    # Copy template
-    cp -r "$temp_dir/adk_agent" "$target_dir/$agent_name"
-    
-    # Replace all references
-    find "$target_dir/$agent_name" -type f -name "*.py" -exec sed -i.bak "s/adk_agent/$agent_name/g" {} \;
-    find "$target_dir/$agent_name" -type f -name "*.md" -exec sed -i.bak "s/adk_agent/$agent_name/g" {} \;
-    
-    # Clean up backup files
-    find "$target_dir/$agent_name" -name "*.bak" -delete
-    
-    # Create additional files
-    cat > "$target_dir/$agent_name/.env.template" << ENVEOF
-# Environment Configuration for $agent_name
-# Copy this file to .env and fill in your values
-
-# Required: LLM Model Configuration
-MODEL_ID=your-model-id-here
-
-# Optional: Logging Configuration
-LOG_LEVEL=INFO
-LOG_FORMAT=%(asctime)s %(levelname)s [%(name)s] %(message)s
-
-# Optional: Database Configuration
-DATABASE_URL=
-
-# Optional: LiteLLM Proxy
-USE_LITELLM_PROXY=False
-
-# Optional: Custom Agent Configuration
-AGENT_INSTRUCTION=
-AGENT_DESCRIPTION=
-
-# Add your agent-specific environment variables here
-ENVEOF
-
-    cat > "$target_dir/$agent_name/requirements.txt" << REQEOF
-# Core dependencies for ADK-based agents
-google-adk[a2a]>=1.12.0
-python-dotenv>=1.1.0
-litellm>=1.72.7
-langfuse>=3.3.2
-
-# Add your agent-specific dependencies below:
-REQEOF
-    
-    echo "🧹 Cleaning up..."
-    rm -rf "$temp_dir"
-    
-    echo ""
-    echo "✅ Agent '$agent_name' created successfully!"
-    echo ""
-    echo "📁 Created files:"
-    echo "  ├── 🐍 __init__.py"
-    echo "  ├── 🤖 agent.py"
-    echo "  ├── ⚙️  config.py"
-    echo "  ├── 📝 prompts.py"
-    echo "  ├── 📊 logging_config.py"
-    echo "  ├── 📖 README.md"
-    echo "  ├── 🌍 .env.template"
-    echo "  └── 📦 requirements.txt"
-    echo ""
-    echo "🎯 Next steps:"
-    echo "  1. cd $target_dir/$agent_name"
-    echo "  2. cp .env.template .env"
-    echo "  3. Edit .env with your configuration"
-    echo "  4. Customize prompts.py for your agent's role"
-    echo "  5. Add tools to agent.py"
-    echo ""
-    echo "🎉 Happy coding!"
-}
+curl -s https://raw.githubusercontent.com/VENKATESHWARAN-R/adk_scaffold/main/install.sh | bash
 ```
 
-After adding this to your shell config, reload it:
+### Method 2: Download the Script
+
+Download and set up the scaffold script:
 
 ```bash
-source ~/.zshrc  # or source ~/.bashrc
+# Download the script
+curl -O https://raw.githubusercontent.com/VENKATESHWARAN-R/adk_scaffold/main/adk_scaffold.sh
+
+# Make it executable
+chmod +x adk_scaffold.sh
+
+# Move to a directory in your PATH (optional)
+sudo mv adk_scaffold.sh /usr/local/bin/adk_scaffold
 ```
+
+### Method 3: Clone and Add to PATH
+
+```bash
+# Clone the repository
+git clone https://github.com/VENKATESHWARAN-R/adk_scaffold.git
+
+# Add to your PATH in ~/.zshrc or ~/.bashrc
+echo 'export PATH="$PATH:/path/to/adk_scaffold"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### Method 4: Source Function (Alternative)
+
+If you prefer to keep it as a shell function, add this to your `~/.zshrc` or `~/.bashrc`:
+
+```bash
+# Source the ADK scaffold function
+source /path/to/adk_scaffold/adk_scaffold.sh
+```
+
+**After any setup method, you can use `adk_scaffold` from anywhere!**
 
 ## 📋 Usage
 
-### Create a new agent:
+### Create a new agent
+
 ```bash
 adk_scaffold my_research_agent
 ```
 
-### Create agent in specific directory:
+### Create agent in specific directory
+
 ```bash
 adk_scaffold data_processor ~/workspace/agents/
 ```
 
-### The scaffold will automatically:
+### What the scaffold does automatically
+
 - Copy the template files
 - Replace all `adk_agent` references with your agent name
 - Create environment configuration files
 - Provide next steps for customization
+
+## 💡 Why Use Method 1 (Separate Script)?
+
+The separate script approach is recommended because:
+
+- ✅ **Cleaner shell config**: Keeps your `.zshrc`/`.bashrc` minimal
+- ✅ **Version control friendly**: Easy to update the script independently
+- ✅ **Shell agnostic**: Works in bash, zsh, fish, etc.
+- ✅ **Portable**: Can be called from other scripts or tools
+- ✅ **No pollution**: Doesn't add large functions to your shell environment
 
 ## 🏗️ Template Structure
 
@@ -169,16 +129,19 @@ USE_LITELLM_PROXY=True           # Optional
 ## 🎲 Agent Types & Examples
 
 ### Research Agent
+
 - **Purpose**: Information gathering and analysis
 - **Tools**: Search, web scraping, document analysis
 - **Output**: Structured reports and recommendations
 
 ### Data Processing Agent
+
 - **Purpose**: Transform and analyze data
 - **Tools**: Data manipulation, visualization, statistics
 - **Output**: Processed datasets and insights
 
 ### Task Automation Agent
+
 - **Purpose**: Execute workflows and processes
 - **Tools**: API calls, file operations, system commands
 - **Output**: Completed tasks and status reports
@@ -208,17 +171,20 @@ class AgentConfig:
 ## 📝 Best Practices
 
 ### Prompt Engineering
+
 - Use clear, specific instructions
 - Include examples and use cases
 - Define success criteria explicitly
 - Specify do's and don'ts clearly
 
 ### Configuration Management
+
 - Use environment variables for secrets
 - Provide sensible defaults
 - Document all configuration options
 
 ### Error Handling
+
 - Include error handling strategies in prompts
 - Provide fallback behaviors
 - Log configuration issues appropriately

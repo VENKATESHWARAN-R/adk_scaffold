@@ -13,7 +13,7 @@ imported and used throughout the agent codebase.
 
 Classes:
     AgentConfig: Main configuration dataclass containing all agent settings
-    
+
 Variables:
     settings: Global instance of AgentConfig for easy import and usage
 
@@ -45,19 +45,19 @@ logger.info("Logging is set up with level: %s", log_level)
 class AgentConfig:
     """
     Configuration dataclass for agent settings and behavior.
-    
+
     This class centralizes all configuration options for the agent, including
     database connections, logging levels, model settings, and prompt configuration.
-    
+
     Attributes:
         database_url (str | None): Database connection URL from environment
         log_level (str): Logging verbosity level (default: INFO)
         model_id (str): Identifier for the LLM model to use
-        
+
     Properties:
         agent_description (str): Brief description of agent capabilities
         agent_instruction (str): Complete system prompt for the agent
-        
+
     Environment Variables:
         DATABASE_URL: Optional database connection string
         LOG_LEVEL: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -69,16 +69,14 @@ class AgentConfig:
     # --> Common Settings
     # Database configuration (optional for stateless agents)
     database_url: str | None = field(default_factory=lambda: os.getenv("DATABASE_URL"))
-    
+
     # Logging configuration
     log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"))
     # <-- End of Common Settings
 
     # --> Agent Settings
     # Model configuration (required)
-    model_id: str = field(
-        default_factory=lambda: os.getenv("MODEL_ID")
-    )
+    model_id: str = field(default_factory=lambda: os.getenv("MODEL_ID"))
     # <-- End of Agent Settings
 
     # --> Agent Prompts and Descriptions
@@ -86,7 +84,7 @@ class AgentConfig:
     def agent_description(self) -> str:
         """
         Get the agent's description from prompts module.
-        
+
         Returns:
             str: Brief description of the agent's purpose and capabilities
         """
@@ -96,14 +94,14 @@ class AgentConfig:
     def agent_instruction(context: ReadonlyContext) -> str:
         """
         Get the agent's system instruction/prompt with dynamic context.
-        
+
         This method is static to allow passing context at runtime while
         maintaining clean configuration structure. The context includes
         user information and current date/time.
-        
+
         Args:
             context (ReadonlyContext): Runtime context with state and user info
-            
+
         Returns:
             str: Complete system instruction for the agent
         """
