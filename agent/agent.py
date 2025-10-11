@@ -18,34 +18,64 @@ Usage:
 
 Environment Variables:
     USE_LITELLM_PROXY: Set to "True" to use LiteLLM proxy instead of direct model access
+    MODEL_ID: LLM model identifier (from config)
+    AGENT_NAME: Agent instance name (from config)
+
+Example:
+    To add tools to your agent:
+
+    from google.adk.tools import FunctionTool
+    from agent.tools.toolset import agent_tools
+
+    tools=[FunctionTool(func=tool) for tool in agent_tools]
+
+    To add sub-agents:
+
+    from specialist_agent import specialist
+
+    sub_agents=[specialist]
 """
 
 import os
 from google.adk.agents.llm_agent import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
+from google.adk.tools import FunctionTool
 
-from .config import settings
+from logging_config import setup_logging
+from config import settings
+from agent.tools.toolset import agent_tools
+
+# Initialize logging
+setup_logging()
 
 # Main agent instance configuration
 # This agent will be automatically discovered and executed by the ADK framework
 root_agent = LlmAgent(
     # Agent identification
-    name="adk_agent",  # TODO: Replace with actual agent name during scaffolding
+    name=settings.agent_name,
+
     # Model configuration - supports both direct model and LiteLLM proxy
+    # Set USE_LITELLM_PROXY=True in environment to use LiteLLM proxy
     model=settings.model_id
     if os.getenv("USE_LITELLM_PROXY") != "True"
     else LiteLlm(settings.model_id),
-    # Agent behavior configuration
+
+    # Agent behavior configuration from prompts
     description=settings.agent_description,
     instruction=settings.agent_instruction,
-    # Tools and capabilities (customize based on agent requirements)
-    tools=[
-        # TODO: Add agent-specific tools here
-        # Example: google_search_tool, file_operations_tool, etc.
-    ],
-    # Sub-agents (for multi-agent workflows)
-    sub_agents=[
-        # TODO: Add sub-agents if needed for complex workflows
-        # Example: specialist agents for specific tasks
-    ],
+
+    # Tools and capabilities
+    # TODO: Customize based on your agent requirements
+    # Uncomment the line below when you add tools to toolset.py
+    tools=[FunctionTool(func=tool) for tool in agent_tools],
+
+    # Sub-agents for multi-agent workflows
+    # TODO: Add sub-agents if needed for complex workflows
+    # Example:
+    # sub_agents=[
+    #     research_specialist,
+    #     data_analyst,
+    #     report_writer,
+    # ],
+    sub_agents=[],
 )

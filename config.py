@@ -1,89 +1,116 @@
 """
 Agent Configuration Module
 
-This module handles all configuration settings for the agent including:
-- Environment variable management
-- Model configuration
-- Database connections
-- Logging setup
-- Agent prompts and descriptions
+This module handles all configuration settings for the agent using Pydantic
+for type validation and environment variable management.
 
-The AgentConfig class serves as a centralized configuration object that can be
-imported and used throughout the agent codebase.
-
-Classes:
-    AgentConfig: Main configuration dataclass containing all agent settings
-
-Variables:
-    settings: Global instance of AgentConfig for easy import and usage
+Components:
+    AgentConfig: Main configuration class with all agent settings
+    SENSITIVE_FIELDS: Set of field names that should be masked in logs
 
 Environment Variables:
-    DATABASE_URL: Database connection string (optional)
+    DATABASE_URL: Database connection string (optional, default: in-memory SQLite)
+    MODEL_ID: LLM model identifier (default: gemma3)
+    AGENT_NAME: Name of the agent (default: adk_agent)
     LOG_LEVEL: Logging level (default: INFO)
-    MODEL_ID: LLM model identifier for the agent
-    AGENT_INSTRUCTION: Custom agent prompt (overrides default)
-    AGENT_DESCRIPTION: Custom agent description (overrides default)
+
+    # TODO: Add your agent-specific tool configuration variables here
+    # Example:
+    # EXTERNAL_API_URL: URL for external API integration
+    # API_TIMEOUT: Timeout for API calls in seconds
+    # CACHE_TTL: Cache time-to-live in seconds
+
+Usage:
+    from config import AgentConfig
+    settings = AgentConfig()
+    print(settings.model_id)
 """
 
-from dataclasses import dataclass, field
-import os
-import logging
-
+from pydantic import AnyUrl, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from google.adk.agents.readonly_context import ReadonlyContext
-from dotenv import load_dotenv
 
-from .logging_config import log_level
-from .prompts import get_agent_description, get_agent_instruction
+from prompts import get_agent_description, get_agent_instruction
 
-load_dotenv()
+# Sensitive field names (add more as needed)
+# These fields will be excluded from logs during initialization
+SENSITIVE_FIELDS: set[str] = {
+    "database_url",
+    # TODO: Add your sensitive field names here
+    # Example: "external_api_key", "service_password", etc.
+}
 
-logger = logging.getLogger(__name__)
-logger.info("Logging is set up with level: %s", log_level)
 
-
-@dataclass
-class AgentConfig:
+class AgentConfig(BaseSettings):
     """
-    Configuration dataclass for agent settings and behavior.
+    Main Agent configuration settings using Pydantic BaseSettings.
 
-    This class centralizes all configuration options for the agent, including
-    database connections, logging levels, model settings, and prompt configuration.
+    This class automatically loads configuration from environment variables
+    and provides type validation, default values, and documentation.
 
     Attributes:
-        database_url (str | None): Database connection URL from environment
-        log_level (str): Logging verbosity level (default: INFO)
-        model_id (str): Identifier for the LLM model to use
+        database_url: Database connection URL (optional)
+        model_id: LLM model identifier
+        agent_name: Name of the agent instance
 
     Properties:
-        agent_description (str): Brief description of agent capabilities
-        agent_instruction (str): Complete system prompt for the agent
+        agent_description: Returns the agent's description from prompts
+        agent_instruction: Returns the agent's instruction with context
 
-    Environment Variables:
-        DATABASE_URL: Optional database connection string
-        LOG_LEVEL: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        MODEL_ID: Required - LLM model identifier
-        AGENT_INSTRUCTION: Optional custom system prompt
-        AGENT_DESCRIPTION: Optional custom agent description
+    Configuration Sections:
+        - Common Settings: Basic agent configuration
+        - Tool Settings: Configuration for agent tools and integrations
     """
 
     # --> Common Settings
     # Database configuration (optional for stateless agents)
-    database_url: str | None = field(default_factory=lambda: os.getenv("DATABASE_URL"))
+    database_url: AnyUrl = Field(
+        default=AnyUrl("sqlite:///:memory:"),
+        description="Database connection URL for session persistence"
+    )
 
-    # Logging configuration
-    log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"))
+    # Model and agent identification
+    model_id: str = Field(
+        default="gemma3",
+        description="LLM model identifier (e.g., gemma3, gpt-4, claude-3)"
+    )
+
+    agent_name: str = Field(
+        default="adk_agent",
+        description="Name of the agent instance"
+    )
     # <-- End of Common Settings
 
-    # --> Agent Settings
-    # Model configuration (required)
-    model_id: str = field(default_factory=lambda: os.getenv("MODEL_ID"))
-    # <-- End of Agent Settings
+    # --> Tool Settings
+    # TODO: Add your tool-specific configuration here
+    # This section should contain configuration for external services,
+    # APIs, databases, or other tools your agent uses.
+    #
+    # Examples:
+    # external_api_url: HttpUrl | None = Field(
+    #     default=None,
+    #     description="URL for external API integration"
+    # )
+    #
+    # api_timeout: int = Field(
+    #     default=30,
+    #     description="Timeout for API calls in seconds"
+    # )
+    #
+    # cache_ttl: int = Field(
+    #     default=3600,
+    #     description="Cache time-to-live in seconds"
+    # )
+    # <-- End of Tool Settings
 
-    # --> Agent Prompts and Descriptions
+    # Agent prompt and description
     @property
     def agent_description(self) -> str:
         """
-        Get the agent's description from prompts module.
+        Returns the agent description prompt.
+
+        The description is loaded from the prompts module and can be
+        overridden via the AGENT_DESCRIPTION environment variable.
 
         Returns:
             str: Brief description of the agent's purpose and capabilities
@@ -93,23 +120,31 @@ class AgentConfig:
     @staticmethod
     def agent_instruction(context: ReadonlyContext) -> str:
         """
-        Get the agent's system instruction/prompt with dynamic context.
+        Returns the agent instruction prompt with runtime context.
 
-        This method is static to allow passing context at runtime while
-        maintaining clean configuration structure. The context includes
-        user information and current date/time.
+        The instruction is loaded from the prompts module and includes
+        dynamic context such as user information and current date/time.
+        Can be overridden via the AGENT_INSTRUCTION environment variable.
 
         Args:
-            context (ReadonlyContext): Runtime context with state and user info
+            context: Runtime context containing state and user information
 
         Returns:
             str: Complete system instruction for the agent
         """
         return get_agent_instruction(context)
 
-    # <-- End of Agent Instructions
+    # Pydantic model configuration
+    model_config = SettingsConfigDict(
+        # Allow arbitrary types (needed for AnyUrl, HttpUrl, etc.)
+        arbitrary_types_allowed=True,
+        # Don't validate default values
+        validate_default=False,
+        # Case-sensitive environment variables
+        case_sensitive=False,
+    )
 
 
 # Global configuration instance
-# Import this instance throughout the codebase: from config import settings
+# Import this throughout the codebase: from config import settings
 settings = AgentConfig()

@@ -1,8 +1,19 @@
 # ADK Agent Scaffold Template
 
-A comprehensive scaffold template for creating ADK (Agent Development Kit) based agents. This template provides a well-structured foundation with proper documentation, configuration management, and prompt templates.
+A production-ready scaffold template for creating Google ADK (Agent Development Kit) agents with built-in observability, authentication, and best practices.
 
-## 🚀 Quick Setup
+## Features
+
+- **Production-Grade FastAPI Server** - Complete HTTP server with authentication and monitoring
+- **Langfuse Observability** - Optional tracing and monitoring integration
+- **Pydantic Configuration** - Type-safe configuration management with validation
+- **API Key Authentication** - Secure your agent endpoints
+- **Modular Architecture** - Clean separation of concerns with organized structure
+- **Sensitive Data Masking** - Automatic credential masking in logs
+- **Tool Organization** - Dedicated module for agent tools
+- **Environment-Based Config** - Comprehensive .env.template with all options
+
+## Quick Setup
 
 ### Method 1: One-liner Install (Easiest)
 
@@ -11,8 +22,6 @@ curl -s https://raw.githubusercontent.com/VENKATESHWARAN-R/adk_scaffold/main/ins
 ```
 
 ### Method 2: Download the Script
-
-Download and set up the scaffold script:
 
 ```bash
 # Download the script
@@ -36,160 +45,333 @@ echo 'export PATH="$PATH:/path/to/adk_scaffold"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-### Method 4: Source Function (Alternative)
-
-If you prefer to keep it as a shell function, add this to your `~/.zshrc` or `~/.bashrc`:
-
-```bash
-# Source the ADK scaffold function
-source /path/to/adk_scaffold/adk_scaffold.sh
-```
-
-**After any setup method, you can use `adk_scaffold` from anywhere!**
-
-## 📋 Usage
-
-### Create a new agent
-
-```bash
-adk_scaffold my_research_agent
-```
-
-### Create agent in specific directory
-
-```bash
-adk_scaffold data_processor ~/workspace/agents/
-```
-
-### What the scaffold does automatically
-
-- Copy the template files
-- Replace all `adk_agent` references with your agent name
-- Create environment configuration files
-- Provide next steps for customization
-
-## 💡 Why Use Method 1 (Separate Script)?
-
-The separate script approach is recommended because:
-
-- ✅ **Cleaner shell config**: Keeps your `.zshrc`/`.bashrc` minimal
-- ✅ **Version control friendly**: Easy to update the script independently
-- ✅ **Shell agnostic**: Works in bash, zsh, fish, etc.
-- ✅ **Portable**: Can be called from other scripts or tools
-- ✅ **No pollution**: Doesn't add large functions to your shell environment
-
-## 🏗️ Template Structure
+## Project Structure
 
 ```
 adk_agent/
-├── __init__.py           # Package initialization and exports
-├── agent.py              # Main agent definition and configuration
-├── config.py             # Centralized configuration management
-├── prompts.py            # Agent instructions and descriptions templates
-├── logging_config.py     # Logging system setup
-└── README.md            # Template documentation
+├── main.py                      # Production FastAPI server with auth & observability
+├── __init__.py                  # Package initialization with config logging
+├── config.py                    # Pydantic-based configuration management
+├── prompts.py                   # Agent instructions and descriptions
+├── logging_config.py            # Centralized logging setup
+├── .env.template                # Environment configuration template
+├── pyproject.toml               # Project metadata and dependencies
+├── agent/
+│   ├── __init__.py
+│   ├── agent.py                 # Main agent definition
+│   └── tools/
+│       ├── __init__.py
+│       └── toolset.py           # Agent tools module
+└── README.md
 ```
 
-## 🎯 Customization Guide
+## Usage
 
-### 1. Agent Prompts (`prompts.py`)
-
-The prompt template includes placeholder sections:
-
-- **`[AGENT_NAME]`** - Replace with your agent's name
-- **`[Agent Role/Specialization]`** - Define the agent's primary role
-- **`[ROLE_DESCRIPTION]`** - Detailed description of what the agent does
-- **`[PRIMARY_FUNCTION]`** - Main capability or service provided
-- **`[MAIN_OBJECTIVE]`** - Core goal the agent works toward
-- **`[KEY_METHODS]`** - How the agent accomplishes its objectives
-
-### 2. Tools Configuration
-
-In `agent.py`, add your tools to the `tools` list:
-
-```python
-tools=[
-    google_search_tool,
-    file_operations_tool,
-    custom_analysis_tool,
-],
-```
-
-### 3. Environment Variables
-
-Required environment variables:
+### Creating a New Agent
 
 ```bash
-MODEL_ID=your-llm-model-id        # Required
-LOG_LEVEL=INFO                    # Optional
-DATABASE_URL=your-database-url    # Optional
-USE_LITELLM_PROXY=True           # Optional
+# Create in current directory
+adk_scaffold my_agent
+
+# Create in specific directory
+adk_scaffold my_agent ~/workspace/agents/
 ```
 
-## 🎲 Agent Types & Examples
+### Setting Up Your Agent
 
-### Research Agent
+1. **Configure Environment Variables**
+   ```bash
+   cd my_agent
+   cp .env.template .env
+   # Edit .env with your configuration
+   ```
 
-- **Purpose**: Information gathering and analysis
-- **Tools**: Search, web scraping, document analysis
-- **Output**: Structured reports and recommendations
+2. **Install Dependencies**
+   ```bash
+   # Using pip
+   pip install -e .
 
-### Data Processing Agent
+   # Using uv (recommended)
+   uv pip install -e .
+   ```
 
-- **Purpose**: Transform and analyze data
-- **Tools**: Data manipulation, visualization, statistics
-- **Output**: Processed datasets and insights
+3. **Run the Agent Server**
+   ```bash
+   # Development mode
+   python main.py
 
-### Task Automation Agent
+   # Or with uvicorn
+   uvicorn main:app --reload
+   ```
 
-- **Purpose**: Execute workflows and processes
-- **Tools**: API calls, file operations, system commands
-- **Output**: Completed tasks and status reports
+4. **Access the Web Interface**
+   Open http://localhost:8080 in your browser
 
-## 🔧 Advanced Configuration
+## Configuration Guide
 
-### Multi-Agent Workflows
+### Essential Settings (.env)
+
+```bash
+# Core Agent Settings
+MODEL_ID="gemini-2.5-flash"      # LLM model to use
+AGENT_NAME="my_agent"             # Your agent's name
+DATABASE_URL="sqlite:///:memory:" # Session storage
+
+# Server Settings
+HOST="0.0.0.0"
+PORT="8080"
+SERVE_WEB_INTERFACE="true"
+```
+
+### Production Settings
+
+```bash
+# API Authentication (Highly Recommended)
+ADK_API_KEYS="sk-prod-key-123,sk-backup-key-456"
+
+# Langfuse Observability
+LANGFUSE_ENABLED="true"
+LANGFUSE_PUBLIC_KEY="pk-your-key"
+LANGFUSE_SECRET_KEY="sk-your-key"
+LANGFUSE_HOST="https://cloud.langfuse.com"
+```
+
+### Using LiteLLM Proxy
+
+```bash
+# Enable LiteLLM for multi-provider support
+USE_LITELLM_PROXY="True"
+MODEL_ID="gpt-4o-mini"  # Use any LiteLLM-supported model
+```
+
+## Customization Guide
+
+### 1. Adding Tools
+
+Edit `agent/tools/toolset.py`:
 
 ```python
-sub_agents=[
-    specialist_research_agent,
-    data_analysis_agent,
-    report_generation_agent,
-]
+def search_web(query: str) -> str:
+    """Search the web for information."""
+    # Your implementation
+    return results
+
+def analyze_data(data: dict) -> dict:
+    """Analyze provided data."""
+    # Your implementation
+    return analysis
+
+agent_tools = [search_web, analyze_data]
 ```
 
-### Custom Configuration Options
+### 2. Customizing Prompts
+
+Edit `prompts.py` to define your agent's behavior, instructions, and personality.
+
+### 3. Adding Configuration
+
+In `config.py`, add tool-specific settings:
 
 ```python
-@dataclass
-class AgentConfig:
-    # Agent-specific settings
-    api_endpoint: str = field(default_factory=lambda: os.getenv("API_ENDPOINT"))
-    rate_limit: int = field(default_factory=lambda: int(os.getenv("RATE_LIMIT", "10")))
+class AgentConfig(BaseSettings):
+    # Existing fields...
+
+    # Your custom configuration
+    api_endpoint: HttpUrl = Field(
+        default=None,
+        description="External API endpoint"
+    )
+
+    api_timeout: int = Field(
+        default=30,
+        description="API timeout in seconds"
+    )
 ```
 
-## 📝 Best Practices
+Add to `SENSITIVE_FIELDS` if needed:
 
-### Prompt Engineering
+```python
+SENSITIVE_FIELDS: set[str] = {
+    "database_url",
+    "api_key",  # Add your sensitive fields
+}
+```
 
-- Use clear, specific instructions
-- Include examples and use cases
-- Define success criteria explicitly
-- Specify do's and don'ts clearly
+### 4. Sub-Agents (Multi-Agent Workflows)
+
+In `agent/agent.py`:
+
+```python
+from specialist_agent import research_agent, data_agent
+
+root_agent = LlmAgent(
+    name=settings.agent_name,
+    model=settings.model_id,
+    description=settings.agent_description,
+    instruction=settings.agent_instruction,
+    tools=[FunctionTool(func=tool) for tool in agent_tools],
+    sub_agents=[research_agent, data_agent],  # Add sub-agents
+)
+```
+
+## API Usage
+
+### With Authentication
+
+```bash
+curl -H "X-API-KEY: your-api-key" \
+     -H "Content-Type: application/json" \
+     -d '{"message": "Hello"}' \
+     http://localhost:8080/api/agents/my_agent
+```
+
+### Health Check (No Auth Required)
+
+```bash
+curl http://localhost:8080/health
+```
+
+## Development
+
+### Running Tests
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+```
+
+### Code Quality
+
+```bash
+# Format code
+black .
+
+# Lint
+ruff check .
+
+# Type checking
+mypy .
+```
+
+## Production Deployment
+
+### Using Gunicorn
+
+```bash
+# Install production dependencies
+pip install -e ".[prod]"
+
+# Run with gunicorn
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080
+```
+
+### Docker Deployment
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY . .
+
+RUN pip install -e ".[prod]"
+
+ENV PORT=8080
+EXPOSE 8080
+
+CMD ["python", "main.py"]
+```
+
+## Observability with Langfuse
+
+Langfuse provides:
+- **Trace Analysis** - Complete visibility into agent execution
+- **Performance Metrics** - Response times, token usage, costs
+- **Debug Tools** - Inspect agent reasoning and tool calls
+- **User Analytics** - Track usage patterns and errors
+
+Enable by setting `LANGFUSE_ENABLED=true` in your .env file.
+
+## Architecture Highlights
+
+### Pydantic Configuration
+- Type-safe configuration with validation
+- Automatic environment variable loading
+- Clear documentation with Field descriptions
+
+### Sensitive Data Protection
+- Automatic masking of credentials in logs
+- URL password masking
+- Configurable sensitive field list
+
+### Modular Design
+- Clean separation between server, agent, tools, and config
+- Easy to test and maintain
+- Extensible architecture
+
+### Production-Ready Server
+- Health checks for monitoring
+- API key authentication
+- CORS configuration
+- OpenAPI documentation
+
+## Best Practices
 
 ### Configuration Management
-
-- Use environment variables for secrets
-- Provide sensible defaults
+- Use environment variables for all settings
+- Never commit .env files
 - Document all configuration options
+- Provide sensible defaults
 
-### Error Handling
+### Security
+- Always use API keys in production
+- Mask sensitive data in logs
+- Use HTTPS in production
+- Rotate API keys regularly
 
-- Include error handling strategies in prompts
-- Provide fallback behaviors
-- Log configuration issues appropriately
+### Tool Development
+- Keep tools focused and single-purpose
+- Include comprehensive docstrings
+- Handle errors gracefully
+- Add timeout handling for external calls
 
-## 🤝 Contributing
+### Prompt Engineering
+- Be specific and clear in instructions
+- Include examples and use cases
+- Define success criteria
+- Specify do's and don'ts
+
+## Troubleshooting
+
+### Import Errors
+```bash
+# Ensure package is installed
+pip install -e .
+```
+
+### Configuration Issues
+```bash
+# Check configuration is loaded correctly
+python -c "from config import settings; print(settings.model_dump())"
+```
+
+### Langfuse Connection Issues
+```bash
+# Verify credentials
+python -c "from langfuse import Langfuse; client = Langfuse(); print(client.auth_check())"
+```
+
+## Resources
+
+- [Google ADK Documentation](https://cloud.google.com/vertex-ai/docs/adk)
+- [Langfuse Documentation](https://langfuse.com/docs)
+- [LiteLLM Documentation](https://docs.litellm.ai/)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Pydantic Documentation](https://docs.pydantic.dev/)
+
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -197,16 +379,10 @@ class AgentConfig:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📚 Resources
-
-- [ADK Documentation](https://docs.google.com/adk)
-- [Agent Development Guide](https://docs.google.com/adk/agents)
-- [Multi-Agent Workflows](https://docs.google.com/adk/multi-agent)
-
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-**Note**: This scaffold provides a solid foundation for building robust, maintainable ADK agents. Customize it based on your specific requirements and use case!
+**Note**: This scaffold provides a production-ready foundation for building robust, observable, and secure ADK agents. Customize it based on your specific requirements!
