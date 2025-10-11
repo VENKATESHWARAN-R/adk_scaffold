@@ -30,7 +30,7 @@ from pydantic import AnyUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from google.adk.agents.readonly_context import ReadonlyContext
 
-from prompts import get_agent_description, get_agent_instruction
+from app.prompts import get_agent_description, get_agent_instruction
 
 # Sensitive field names (add more as needed)
 # These fields will be excluded from logs during initialization

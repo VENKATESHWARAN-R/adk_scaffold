@@ -1,217 +1,151 @@
-# ADK Agent Scaffold Template
+# ADK Agent Scaffold
 
-A production-ready scaffold template for creating Google ADK (Agent Development Kit) agents with built-in observability, authentication, and best practices.
+Production-ready template for Google ADK agents with observability, authentication, and Docker support.
 
 ## Features
 
-- **Production-Grade FastAPI Server** - Complete HTTP server with authentication and monitoring
-- **Langfuse Observability** - Optional tracing and monitoring integration
-- **Pydantic Configuration** - Type-safe configuration management with validation
-- **API Key Authentication** - Secure your agent endpoints
-- **Modular Architecture** - Clean separation of concerns with organized structure
-- **Sensitive Data Masking** - Automatic credential masking in logs
-- **Tool Organization** - Dedicated module for agent tools
-- **Environment-Based Config** - Comprehensive .env.template with all options
+✅ **Production FastAPI Server** - Auth, observability, health checks
+✅ **Langfuse Integration** - Complete tracing and monitoring
+✅ **Pydantic Config** - Type-safe settings with validation
+✅ **Docker Ready** - Multi-stage builds with uv
+✅ **CLI Utility** - Quick scaffolding with `adk_scaffold` command
+✅ **Sensitive Data Masking** - Automatic credential protection
 
-## Quick Setup
+## Quick Start
 
-### Method 1: One-liner Install (Easiest)
+### Install CLI
 
 ```bash
-curl -s https://raw.githubusercontent.com/VENKATESHWARAN-R/adk_scaffold/main/install.sh | bash
-```
+# One-liner install
+curl -s https://raw.githubusercontent.com/VENKATESHWARAN-R/adk_scaffold/main/scripts/install.sh | bash
 
-### Method 2: Download the Script
-
-```bash
-# Download the script
-curl -O https://raw.githubusercontent.com/VENKATESHWARAN-R/adk_scaffold/main/adk_scaffold.sh
-
-# Make it executable
+# Or manual
+curl -O https://raw.githubusercontent.com/VENKATESHWARAN-R/adk_scaffold/main/scripts/adk_scaffold.sh
 chmod +x adk_scaffold.sh
-
-# Move to a directory in your PATH (optional)
 sudo mv adk_scaffold.sh /usr/local/bin/adk_scaffold
 ```
 
-### Method 3: Clone and Add to PATH
+### Create Agent
 
 ```bash
-# Clone the repository
-git clone https://github.com/VENKATESHWARAN-R/adk_scaffold.git
+# Create new agent
+adk_scaffold my_agent
 
-# Add to your PATH in ~/.zshrc or ~/.bashrc
-echo 'export PATH="$PATH:/path/to/adk_scaffold"' >> ~/.zshrc
-source ~/.zshrc
+# Or specify directory
+adk_scaffold my_agent ~/projects/agents/
+```
+
+### Run Agent
+
+```bash
+cd my_agent
+cp app/.env.template app/.env
+# Edit app/.env with your settings
+
+# Install dependencies
+pip install -e .
+# or: uv pip install -e .
+
+# Run with FastAPI
+python -m app.main
+
+# Or use ADK CLI
+adk web .
+adk run .
 ```
 
 ## Project Structure
 
 ```
-adk_agent/
-├── main.py                      # Production FastAPI server with auth & observability
-├── __init__.py                  # Package initialization with config logging
-├── config.py                    # Pydantic-based configuration management
-├── prompts.py                   # Agent instructions and descriptions
-├── logging_config.py            # Centralized logging setup
-├── .env.template                # Environment configuration template
-├── pyproject.toml               # Project metadata and dependencies
-├── agent/
-│   ├── __init__.py
-│   ├── agent.py                 # Main agent definition
-│   └── tools/
-│       ├── __init__.py
-│       └── toolset.py           # Agent tools module
-└── README.md
+my_agent/
+├── __init__.py              # ADK command wrapper
+├── Dockerfile               # Production build
+├── .dockerignore
+├── pyproject.toml
+├── README.md
+└── app/
+    ├── __init__.py         # Config initialization
+    ├── main.py             # FastAPI server
+    ├── config.py           # Pydantic settings
+    ├── prompts.py          # Agent instructions
+    ├── logging_config.py
+    ├── .env.template       # Config template
+    └── agent/
+        ├── agent.py        # Agent definition
+        └── tools/
+            └── toolset.py  # Agent tools
 ```
 
-## Usage
+## Configuration
 
-### Creating a New Agent
-
-```bash
-# Create in current directory
-adk_scaffold my_agent
-
-# Create in specific directory
-adk_scaffold my_agent ~/workspace/agents/
-```
-
-### Setting Up Your Agent
-
-1. **Configure Environment Variables**
-   ```bash
-   cd my_agent
-   cp .env.template .env
-   # Edit .env with your configuration
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   # Using pip
-   pip install -e .
-
-   # Using uv (recommended)
-   uv pip install -e .
-   ```
-
-3. **Run the Agent Server**
-   ```bash
-   # Development mode
-   python main.py
-
-   # Or with uvicorn
-   uvicorn main:app --reload
-   ```
-
-4. **Access the Web Interface**
-   Open http://localhost:8080 in your browser
-
-## Configuration Guide
-
-### Essential Settings (.env)
+### Essential Settings (app/.env)
 
 ```bash
-# Core Agent Settings
-MODEL_ID="gemini-2.5-flash"      # LLM model to use
-AGENT_NAME="my_agent"             # Your agent's name
-DATABASE_URL="sqlite:///:memory:" # Session storage
-
-# Server Settings
-HOST="0.0.0.0"
-PORT="8080"
-SERVE_WEB_INTERFACE="true"
+MODEL_ID="gemini-2.5-flash"
+AGENT_NAME="my_agent"
+DATABASE_URL="sqlite:///:memory:"
 ```
 
 ### Production Settings
 
 ```bash
-# API Authentication (Highly Recommended)
-ADK_API_KEYS="sk-prod-key-123,sk-backup-key-456"
+# API Authentication
+ADK_API_KEYS="sk-your-key-here"
 
 # Langfuse Observability
 LANGFUSE_ENABLED="true"
-LANGFUSE_PUBLIC_KEY="pk-your-key"
-LANGFUSE_SECRET_KEY="sk-your-key"
+LANGFUSE_PUBLIC_KEY="pk-xxx"
+LANGFUSE_SECRET_KEY="sk-xxx"
 LANGFUSE_HOST="https://cloud.langfuse.com"
 ```
 
-### Using LiteLLM Proxy
+### LiteLLM Support
 
 ```bash
-# Enable LiteLLM for multi-provider support
 USE_LITELLM_PROXY="True"
-MODEL_ID="gpt-4o-mini"  # Use any LiteLLM-supported model
+MODEL_ID="gpt-4o-mini"  # Any LiteLLM-supported model
 ```
 
-## Customization Guide
+## Customization
 
-### 1. Adding Tools
+### 1. Add Tools
 
-Edit `agent/tools/toolset.py`:
+Edit `app/agent/tools/toolset.py`:
 
 ```python
 def search_web(query: str) -> str:
     """Search the web for information."""
-    # Your implementation
     return results
 
-def analyze_data(data: dict) -> dict:
-    """Analyze provided data."""
-    # Your implementation
-    return analysis
-
-agent_tools = [search_web, analyze_data]
+agent_tools = [search_web]
 ```
 
-### 2. Customizing Prompts
+### 2. Configure Settings
 
-Edit `prompts.py` to define your agent's behavior, instructions, and personality.
-
-### 3. Adding Configuration
-
-In `config.py`, add tool-specific settings:
+Edit `app/config.py`:
 
 ```python
 class AgentConfig(BaseSettings):
-    # Existing fields...
-
-    # Your custom configuration
-    api_endpoint: HttpUrl = Field(
-        default=None,
-        description="External API endpoint"
-    )
-
-    api_timeout: int = Field(
-        default=30,
-        description="API timeout in seconds"
-    )
+    # Add your fields
+    api_endpoint: HttpUrl | None = Field(default=None)
+    api_timeout: int = Field(default=30)
 ```
 
-Add to `SENSITIVE_FIELDS` if needed:
+### 3. Customize Prompts
 
-```python
-SENSITIVE_FIELDS: set[str] = {
-    "database_url",
-    "api_key",  # Add your sensitive fields
-}
-```
+Edit `app/prompts.py` for agent behavior and instructions.
 
-### 4. Sub-Agents (Multi-Agent Workflows)
+## Docker Deployment
 
-In `agent/agent.py`:
+```bash
+# Build
+docker build -t my-agent .
 
-```python
-from specialist_agent import research_agent, data_agent
+# Run
+docker run -p 8080:8080 --env-file app/.env my-agent
 
-root_agent = LlmAgent(
-    name=settings.agent_name,
-    model=settings.model_id,
-    description=settings.agent_description,
-    instruction=settings.agent_instruction,
-    tools=[FunctionTool(func=tool) for tool in agent_tools],
-    sub_agents=[research_agent, data_agent],  # Add sub-agents
-)
+# Or with docker-compose
+docker-compose up
 ```
 
 ## API Usage
@@ -219,13 +153,13 @@ root_agent = LlmAgent(
 ### With Authentication
 
 ```bash
-curl -H "X-API-KEY: your-api-key" \
+curl -H "X-API-KEY: your-key" \
      -H "Content-Type: application/json" \
      -d '{"message": "Hello"}' \
      http://localhost:8080/api/agents/my_agent
 ```
 
-### Health Check (No Auth Required)
+### Health Check
 
 ```bash
 curl http://localhost:8080/health
@@ -233,156 +167,75 @@ curl http://localhost:8080/health
 
 ## Development
 
-### Running Tests
-
 ```bash
 # Install dev dependencies
 pip install -e ".[dev]"
+
+# Code quality
+black .
+ruff check .
+mypy .
 
 # Run tests
 pytest
 ```
 
-### Code Quality
+## ADK CLI Commands
 
 ```bash
-# Format code
-black .
-
-# Lint
-ruff check .
-
-# Type checking
-mypy .
+adk web .         # Launch web interface
+adk run .         # Run interactively
+adk api_server .  # Start API server
 ```
 
-## Production Deployment
-
-### Using Gunicorn
-
-```bash
-# Install production dependencies
-pip install -e ".[prod]"
-
-# Run with gunicorn
-gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080
-```
-
-### Docker Deployment
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-COPY . .
-
-RUN pip install -e ".[prod]"
-
-ENV PORT=8080
-EXPOSE 8080
-
-CMD ["python", "main.py"]
-```
-
-## Observability with Langfuse
+## Observability
 
 Langfuse provides:
-- **Trace Analysis** - Complete visibility into agent execution
-- **Performance Metrics** - Response times, token usage, costs
-- **Debug Tools** - Inspect agent reasoning and tool calls
-- **User Analytics** - Track usage patterns and errors
+- Complete execution traces
+- Performance metrics
+- Token usage and costs
+- Error tracking
 
-Enable by setting `LANGFUSE_ENABLED=true` in your .env file.
-
-## Architecture Highlights
-
-### Pydantic Configuration
-- Type-safe configuration with validation
-- Automatic environment variable loading
-- Clear documentation with Field descriptions
-
-### Sensitive Data Protection
-- Automatic masking of credentials in logs
-- URL password masking
-- Configurable sensitive field list
-
-### Modular Design
-- Clean separation between server, agent, tools, and config
-- Easy to test and maintain
-- Extensible architecture
-
-### Production-Ready Server
-- Health checks for monitoring
-- API key authentication
-- CORS configuration
-- OpenAPI documentation
-
-## Best Practices
-
-### Configuration Management
-- Use environment variables for all settings
-- Never commit .env files
-- Document all configuration options
-- Provide sensible defaults
-
-### Security
-- Always use API keys in production
-- Mask sensitive data in logs
-- Use HTTPS in production
-- Rotate API keys regularly
-
-### Tool Development
-- Keep tools focused and single-purpose
-- Include comprehensive docstrings
-- Handle errors gracefully
-- Add timeout handling for external calls
-
-### Prompt Engineering
-- Be specific and clear in instructions
-- Include examples and use cases
-- Define success criteria
-- Specify do's and don'ts
+Enable in `app/.env`:
+```bash
+LANGFUSE_ENABLED="true"
+```
 
 ## Troubleshooting
 
-### Import Errors
+**Import Errors:**
 ```bash
-# Ensure package is installed
 pip install -e .
 ```
 
-### Configuration Issues
+**Configuration Issues:**
 ```bash
-# Check configuration is loaded correctly
-python -c "from config import settings; print(settings.model_dump())"
+python -c "from app.config import settings; print(settings.model_dump())"
 ```
 
-### Langfuse Connection Issues
+**Langfuse Connection:**
 ```bash
-# Verify credentials
-python -c "from langfuse import Langfuse; client = Langfuse(); print(client.auth_check())"
+python -c "from langfuse import Langfuse; print(Langfuse().auth_check())"
 ```
+
+## Architecture
+
+- **Modular Design** - Clean separation of concerns
+- **Type Safety** - Pydantic validation throughout
+- **Security First** - Credential masking, API auth
+- **Production Ready** - Health checks, monitoring, Docker
 
 ## Resources
 
-- [Google ADK Documentation](https://cloud.google.com/vertex-ai/docs/adk)
-- [Langfuse Documentation](https://langfuse.com/docs)
-- [LiteLLM Documentation](https://docs.litellm.ai/)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Pydantic Documentation](https://docs.pydantic.dev/)
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- [Google ADK Docs](https://cloud.google.com/vertex-ai/docs/adk)
+- [Langfuse Docs](https://langfuse.com/docs)
+- [LiteLLM Docs](https://docs.litellm.ai/)
+- [FastAPI Docs](https://fastapi.tiangolo.com/)
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License
 
 ---
 
-**Note**: This scaffold provides a production-ready foundation for building robust, observable, and secure ADK agents. Customize it based on your specific requirements!
+**Quick scaffolding for production-ready ADK agents**
