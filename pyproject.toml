@@ -1,7 +1,7 @@
 [project]
 name = "adk-agent"
 version = "0.1.0"
-description = "Production-ready ADK agent template with observability and authentication"
+description = "Production-ready ADK agent template with observability, authentication and A2A support."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

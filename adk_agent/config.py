@@ -29,8 +29,12 @@ Usage:
 from pydantic import AnyUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from google.adk.agents.readonly_context import ReadonlyContext
+from dotenv import load_dotenv
 
-from app.prompts import get_agent_description, get_agent_instruction
+from adk_agent.prompts import get_agent_description, get_agent_instruction
+
+# Load environment variables from .env file - helpful for local development
+load_dotenv()
 
 # Sensitive field names (add more as needed)
 # These fields will be excluded from logs during initialization

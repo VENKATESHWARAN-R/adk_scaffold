@@ -1,0 +1,26 @@
+{
+  "name": "ADK Agent",
+  "description": "An ADK agent that performs tasks and supports streaming.",
+  "provider": {
+    "organization": "Example Corp",
+    "url": "https://example.com"
+  },
+  "url": "http://localhost:8000/a2a/app",
+  "version": "1.0.0",
+  "protocol_version": "0.3.0",
+  "preferred_transport": "JSONRPC",
+  "default_input_modes": ["text/plain"],
+  "default_output_modes": ["text/plain"],
+  "capabilities": {
+    "streaming": true
+  },
+  "supports_authenticated_extended_card": false,
+  "skills": [
+    {
+      "id": "perform-task",
+      "name": "Task Performer",
+      "description": "Performs a specific task.",
+      "tags": ["automation", "general"]
+    }
+  ]
+}

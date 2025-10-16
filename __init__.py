@@ -16,6 +16,6 @@ For Production Server:
     uvicorn app.main:app --host 0.0.0.0 --port 8080
 """
 
-from .app import root_agent  # pylint: disable=unused-import
+from .adk_agent import root_agent  # pylint: disable=unused-import
 
 __all__ = ["root_agent"]
