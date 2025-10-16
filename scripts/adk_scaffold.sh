@@ -383,6 +383,7 @@ READMEEOF
     print_info "Replacing template references..."
 
     # Function to replace in file (handles both GNU and BSD sed)
+    # Uses | as delimiter to avoid conflicts with / in paths
     replace_in_file() {
         local file="$1"
         local old="$2"
@@ -390,10 +391,10 @@ READMEEOF
 
         if sed --version >/dev/null 2>&1; then
             # GNU sed
-            sed -i "s/${old}/${new}/g" "$file"
+            sed -i "s|${old}|${new}|g" "$file"
         else
             # BSD sed (macOS)
-            sed -i '' "s/${old}/${new}/g" "$file"
+            sed -i '' "s|${old}|${new}|g" "$file"
         fi
     }
 
