@@ -1,7 +1,3 @@
-# Exclude installation and scaffold scripts from being copied to new agents
-adk_scaffold.sh
-install.sh
-
 # Python
 __pycache__/
 *.py[cod]

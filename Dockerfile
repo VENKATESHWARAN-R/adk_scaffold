@@ -18,8 +18,8 @@ COPY pyproject.toml ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-install-project --no-dev
 
-# Now bring in your app code (doesn't bust dep cache unless these files change)
-COPY app/ ./app/
+# Now bring in your agent code (doesn't bust dep cache unless these files change)
+COPY adk_agent/ ./adk_agent/
 
 # After copying the full application, we install the project itself
 # This may not be necessary if we don't have a local package to install
@@ -56,4 +56,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Expect PORT provided by runtime (default 8080)
 ENV PORT=8080
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uvicorn adk_agent.main:app --host 0.0.0.0 --port ${PORT}"]

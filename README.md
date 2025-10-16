@@ -4,11 +4,12 @@ Production-ready template for Google ADK agents with observability, authenticati
 
 ## Features
 
-✅ **Production FastAPI Server** - Auth, observability, health checks
+✅ **Production FastAPI Server** - Auth, observability, health checks, A2A support
 ✅ **Langfuse Integration** - Complete tracing and monitoring
 ✅ **Pydantic Config** - Type-safe settings with validation
-✅ **Docker Ready** - Multi-stage builds with uv
+✅ **Docker Ready** - Multi-stage builds with uv (optional)
 ✅ **CLI Utility** - Quick scaffolding with `adk_scaffold` command
+✅ **Flexible Setup** - Full or minimal mode with `--minimal` flag
 ✅ **Sensitive Data Masking** - Automatic credential protection
 
 ## Quick Start
@@ -28,28 +29,48 @@ sudo mv adk_scaffold.sh /usr/local/bin/adk_scaffold
 ### Create Agent
 
 ```bash
-# Create new agent
+# Create new agent with full Docker support
 adk_scaffold my_agent
 
-# Or specify directory
+# Create in specific directory
 adk_scaffold my_agent ~/projects/agents/
+
+# Create minimal agent (without Docker files)
+adk_scaffold my_agent --minimal
+
+# Get help
+adk_scaffold --help
 ```
+
+#### CLI Options
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--help` | `-h` | Show detailed usage information |
+| `--minimal` | `-m` | Create minimal setup without Docker files (excludes: Dockerfile, pyproject.toml, .dockerignore) |
+
+**Examples:**
+- `adk_scaffold rag_agent` - Creates a full agent with Docker support
+- `adk_scaffold rag_agent --minimal` - Creates agent without Docker files
+- `adk_scaffold rag_agent ~/projects/` - Creates agent in specific directory
+- `adk_scaffold rag_agent ~/projects/ -m` - Minimal agent in specific directory
 
 ### Run Agent
 
 ```bash
-cd my_agent
-cp app/.env.template app/.env
-# Edit app/.env with your settings
+cd my_agent/my_agent
+cp .env.template .env
+# Edit .env with your settings (MODEL_ID, etc.)
 
-# Install dependencies
+# Install dependencies (from parent directory)
+cd ..
 pip install -e .
 # or: uv pip install -e .
 
-# Run with FastAPI
-python -m app.main
+# Run with FastAPI (A2A enabled)
+python -m my_agent.main
 
-# Or use ADK CLI
+# Or use ADK CLI (from parent directory)
 adk web .
 adk run .
 ```
@@ -58,27 +79,32 @@ adk run .
 
 ```
 my_agent/
-├── __init__.py              # ADK command wrapper
-├── Dockerfile               # Production build
-├── .dockerignore
-├── pyproject.toml
-├── README.md
-└── app/
-    ├── __init__.py         # Config initialization
-    ├── main.py             # FastAPI server
-    ├── config.py           # Pydantic settings
-    ├── prompts.py          # Agent instructions
-    ├── logging_config.py
-    ├── .env.template       # Config template
+├── __init__.py              # Root package wrapper
+├── pyproject.toml           # Project dependencies
+├── Dockerfile               # Production Docker build
+├── .dockerignore            # Docker ignore patterns
+├── README.md                # Agent documentation
+└── my_agent/
+    ├── __init__.py          # Agent initialization
+    ├── main.py              # FastAPI server with A2A
+    ├── config.py            # Pydantic settings
+    ├── prompts.py           # Agent instructions
+    ├── logging_config.py    # Logging configuration
+    ├── .env.template        # Environment template
+    ├── agent.json           # ADK agent metadata
     └── agent/
-        ├── agent.py        # Agent definition
+        ├── __init__.py
+        ├── agent.py         # Agent definition
         └── tools/
-            └── toolset.py  # Agent tools
+            ├── __init__.py
+            └── toolset.py   # Agent tools
 ```
+
+**Note:** When using `--minimal` flag, Dockerfile, pyproject.toml, and .dockerignore are excluded.
 
 ## Configuration
 
-### Essential Settings (app/.env)
+### Essential Settings (my_agent/.env)
 
 ```bash
 MODEL_ID="gemini-2.5-flash"
@@ -110,7 +136,7 @@ MODEL_ID="gpt-4o-mini"  # Any LiteLLM-supported model
 
 ### 1. Add Tools
 
-Edit `app/agent/tools/toolset.py`:
+Edit `my_agent/agent/tools/toolset.py`:
 
 ```python
 def search_web(query: str) -> str:
@@ -122,7 +148,7 @@ agent_tools = [search_web]
 
 ### 2. Configure Settings
 
-Edit `app/config.py`:
+Edit `my_agent/config.py`:
 
 ```python
 class AgentConfig(BaseSettings):
@@ -133,16 +159,18 @@ class AgentConfig(BaseSettings):
 
 ### 3. Customize Prompts
 
-Edit `app/prompts.py` for agent behavior and instructions.
+Edit `my_agent/prompts.py` for agent behavior and instructions.
 
 ## Docker Deployment
+
+**Note:** Docker files are only included when creating agents without the `--minimal` flag.
 
 ```bash
 # Build
 docker build -t my-agent .
 
 # Run
-docker run -p 8080:8080 --env-file app/.env my-agent
+docker run -p 8080:8080 --env-file my_agent/.env my-agent
 
 # Or with docker-compose
 docker-compose up
@@ -168,7 +196,7 @@ curl http://localhost:8080/health
 ## Development
 
 ```bash
-# Install dev dependencies
+# Install dev dependencies (full mode only)
 pip install -e ".[dev]"
 
 # Code quality
@@ -181,6 +209,8 @@ pytest
 ```
 
 ## ADK CLI Commands
+
+Run these commands from the agent root directory (e.g., `my_agent/`):
 
 ```bash
 adk web .         # Launch web interface
@@ -196,7 +226,7 @@ Langfuse provides:
 - Token usage and costs
 - Error tracking
 
-Enable in `app/.env`:
+Enable in `my_agent/.env`:
 ```bash
 LANGFUSE_ENABLED="true"
 ```
@@ -205,12 +235,12 @@ LANGFUSE_ENABLED="true"
 
 **Import Errors:**
 ```bash
-pip install -e .
+pip install -e .  # Run from agent root directory
 ```
 
 **Configuration Issues:**
 ```bash
-python -c "from app.config import settings; print(settings.model_dump())"
+python -c "from my_agent.config import settings; print(settings.model_dump())"
 ```
 
 **Langfuse Connection:**
