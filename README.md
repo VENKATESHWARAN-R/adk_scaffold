@@ -71,7 +71,6 @@ cp .env.template .env
 cd ../..
 uv sync
 
-```bash
 # Run with FastAPI (A2A enabled)
 uvicorn my_agent.main:app --host 0.0.0.0 --port 8000
 
@@ -85,16 +84,17 @@ adk run .
 This template supports both **A2A** (Agent-to-Agent) and **AG-UI** (CopilotKit) protocols out of the box:
 
 ### A2A Protocol
+
 - Enables agent-to-agent communication
 - Automatic endpoints at `/a2a/{agent_name}/`
 - Agent cards at `/a2a/{agent_name}/.well-known/agent-card.json`
 
 ### AG-UI Protocol (CopilotKit)
+
 - Frontend integration ready at `/copilotkit`
 - Compatible with CopilotKit framework
 - Enable with `ENABLE_AG_UI="true"` in `.env`
 - [Learn more about AG-UI integration](https://docs.copilotkit.ai/adk/quickstart?path=exiting-agent)
-```
 
 ## Project Structure
 
@@ -267,7 +267,7 @@ docker run -p 8080:8080 --env-file my_agent/.env my-agent
 docker-compose up
 ```
 
-### API Usage
+## API Usage
 
 ### With Authentication
 
@@ -301,7 +301,6 @@ uv sync --dev
 black .
 ruff check .
 mypy .
-
 ```
 
 ## ADK CLI Commands
@@ -360,7 +359,7 @@ python -c "from langfuse import Langfuse; print(Langfuse().auth_check())"
 
 ### Configuration Architecture
 
-```
+```text
 BaseAgentConfig (core/base_config.py)
 ├── Common settings: model_id, agent_name
 │
