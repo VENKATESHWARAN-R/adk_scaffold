@@ -7,22 +7,22 @@ requires-python = ">=3.13"
 dependencies = [
     # Core ADK framework with agent-to-agent communication support
     "google-adk[a2a]>=1.16.0",
-
     # Observability and monitoring
     "langfuse>=3.6.2",
     "openinference-instrumentation-google-adk>=0.1.6",
-
     # LLM proxy support (for multi-provider model access)
     "litellm>=1.77.7",
-
     # Configuration and environment management
     "pydantic>=2.12.0",
     "pydantic-settings>=2.11.0",
     "python-dotenv>=1.1.1",
-
     # Web server
     "fastapi>=0.104.0",
     "uvicorn>=0.24.0",
+    # AG-UI integration
+    #"ag-ui-adk>=0.3.2",
+    # MCP toolbox client integration
+    #"toolbox-core>=0.5.2",
 ]
 
 [project.optional-dependencies]
@@ -36,23 +36,57 @@ dev = [
 ]
 
 # Production deployment dependencies
-prod = [
-    "gunicorn>=21.0.0",
-]
+prod = ["gunicorn>=21.0.0"]
 
-[build-system]
-requires = ["setuptools>=68.0"]
-build-backend = "setuptools.build_meta"
-
-[tool.black]
-line-length = 88
-target-version = ['py311']
+# [build-system]
+# requires = ["hatchling"]
+# build-backend = "hatchling.build"
 
 [tool.ruff]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
 line-length = 88
-target-version = "py311"
+target-version = "py313"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 warn_return_any = true
 warn_unused_configs = true
+
+[dependency-groups]
+dev = [
+    "mypy>=1.18.2",
+    "ruff>=0.14.4",
+]

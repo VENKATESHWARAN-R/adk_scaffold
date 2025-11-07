@@ -86,26 +86,27 @@ from typing import List
 # TODO: Define your agent tool functions here
 # Each function should be well-documented and handle errors appropriately
 
+
 # Example tool (remove in production):
-# def example_calculator(a: int, b: int, operation: str = "add") -> int:
-#     """
-#     Perform basic arithmetic operations.
-#
-#     Args:
-#         a: First number
-#         b: Second number
-#         operation: Operation to perform (add, subtract, multiply, divide)
-#
-#     Returns:
-#         Result of the arithmetic operation
-#     """
-#     operations = {
-#         "add": lambda x, y: x + y,
-#         "subtract": lambda x, y: x - y,
-#         "multiply": lambda x, y: x * y,
-#         "divide": lambda x, y: x / y if y != 0 else 0,
-#     }
-#     return operations.get(operation, operations["add"])(a, b)
+def example_calculator(a: int, b: int, operation: str = "add") -> int:
+    """
+    Perform basic arithmetic operations.
+
+    Args:
+        a: First number
+        b: Second number
+        operation: Operation to perform (add, subtract, multiply, divide)
+
+    Returns:
+        Result of the arithmetic operation
+    """
+    operations = {
+        "add": lambda x, y: x + y,
+        "subtract": lambda x, y: x - y,
+        "multiply": lambda x, y: x * y,
+        "divide": lambda x, y: x / y if y != 0 else 0,
+    }
+    return operations.get(operation, operations["add"])(a, b)
 
 
 # List of all agent tools
@@ -113,4 +114,5 @@ from typing import List
 agent_tools: List = [
     # TODO: Add your tool functions here
     # Example: example_calculator,
+    example_calculator,
 ]

@@ -168,7 +168,7 @@ def get_agent_instruction(context: ReadonlyContext) -> str:
     configured_instruction = os.getenv("AGENT_INSTRUCTION", default_instruction)
 
     # Check if user information exists
-    user_information = str(context.state.get("user_information"))
+    user_information = str(context.session.state.get("user_information"))
     if user_information:
         configured_instruction += "\n\nUser Information:\n" + user_information
 

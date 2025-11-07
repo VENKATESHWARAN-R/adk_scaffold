@@ -6,7 +6,6 @@ for type validation and environment variable management.
 
 Components:
     AgentConfig: Main configuration class with all agent settings
-    SENSITIVE_FIELDS: Set of field names that should be masked in logs
 
 Environment Variables:
     DATABASE_URL: Database connection string (optional, default: in-memory SQLite)
@@ -26,64 +25,58 @@ Usage:
     print(settings.model_id)
 """
 
-from pydantic import AnyUrl, Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, SecretStr
 from google.adk.agents.readonly_context import ReadonlyContext
 from dotenv import load_dotenv
 
-from adk_agent.prompts import get_agent_description, get_agent_instruction
+from adk_agent.core.base_config import BaseAgentConfig
+from adk_agent.agent.prompts import get_agent_description, get_agent_instruction
 
 # Load environment variables from .env file - helpful for local development
 load_dotenv()
 
-# Sensitive field names (add more as needed)
-# These fields will be excluded from logs during initialization
-SENSITIVE_FIELDS: set[str] = {
-    "database_url",
-    # TODO: Add your sensitive field names here
-    # Example: "external_api_key", "service_password", etc.
-}
 
-
-class AgentConfig(BaseSettings):
+class AgentConfig(BaseAgentConfig):
     """
     Main Agent configuration settings using Pydantic BaseSettings.
 
     This class automatically loads configuration from environment variables
     and provides type validation, default values, and documentation.
 
+    Inherits common settings from BaseAgentConfig:
+        - model_id: LLM model identifier
+        - agent_name: Name of the agent instance
+
     Attributes:
         database_url: Database connection URL (optional)
-        model_id: LLM model identifier
-        agent_name: Name of the agent instance
 
     Properties:
         agent_description: Returns the agent's description from prompts
         agent_instruction: Returns the agent's instruction with context
 
     Configuration Sections:
-        - Common Settings: Basic agent configuration
+        - Common Settings: Inherited from BaseAgentConfig
+        - Main Agent Settings: Specific to main agent
         - Tool Settings: Configuration for agent tools and integrations
     """
 
-    # --> Common Settings
+    # --> Main Agent Specific Settings
     # Database configuration (optional for stateless agents)
-    database_url: AnyUrl = Field(
-        default=AnyUrl("sqlite:///:memory:"),
-        description="Database connection URL for session persistence"
+    database_url: SecretStr = Field(
+        default=SecretStr("sqlite:///:memory:"),
+        description="Database connection URL for session persistence",
     )
 
-    # Model and agent identification
+    # Override defaults from BaseAgentConfig for main agent
     model_id: str = Field(
-        default="gemma3",
-        description="LLM model identifier (e.g., gemma3, gpt-4, claude-3)"
+        default="gemini-2.0-flash-exp",
+        description="LLM model identifier (e.g., gemini-2.0-flash-exp, gpt-4, claude-3)",
     )
 
     agent_name: str = Field(
-        default="adk_agent",
-        description="Name of the agent instance"
+        default="adk_agent", description="Name of the agent instance"
     )
-    # <-- End of Common Settings
+    # <-- End of Main Agent Specific Settings
 
     # --> Tool Settings
     # TODO: Add your tool-specific configuration here
@@ -137,16 +130,6 @@ class AgentConfig(BaseSettings):
             str: Complete system instruction for the agent
         """
         return get_agent_instruction(context)
-
-    # Pydantic model configuration
-    model_config = SettingsConfigDict(
-        # Allow arbitrary types (needed for AnyUrl, HttpUrl, etc.)
-        arbitrary_types_allowed=True,
-        # Don't validate default values
-        validate_default=False,
-        # Case-sensitive environment variables
-        case_sensitive=False,
-    )
 
 
 # Global configuration instance

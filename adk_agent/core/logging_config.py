@@ -66,8 +66,7 @@ def setup_logging() -> str:
 
     # Get log format from environment with structured default
     log_format = os.getenv(
-        "LOG_FORMAT",
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        "LOG_FORMAT", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     # Configure Python logging system

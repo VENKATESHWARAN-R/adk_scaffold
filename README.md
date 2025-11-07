@@ -4,12 +4,13 @@ Production-ready template for Google ADK agents with observability, authenticati
 
 ## Features
 
-✅ **Production FastAPI Server** - Auth, observability, health checks, A2A support
-✅ **Langfuse Integration** - Complete tracing and monitoring
-✅ **Pydantic Config** - Type-safe settings with validation
-✅ **Docker Ready** - Multi-stage builds with uv (optional)
-✅ **CLI Utility** - Quick scaffolding with `adk_scaffold` command
-✅ **Flexible Setup** - Full or minimal mode with `--minimal` flag
+✅ **Production FastAPI Server** - Auth, observability, health checks, A2A support  
+✅ **Langfuse Integration** - Complete tracing and monitoring  
+✅ **Pydantic Config** - Type-safe settings with validation  
+✅ **Docker Ready** - Multi-stage builds with uv (optional)  
+✅ **CLI Utility** - Quick scaffolding with `adk_scaffold` command  
+✅ **Flexible Setup** - Full or minimal mode with `--minimal` flag  
+✅ **Sub-Agent Architecture** - Optional database sub-agent with MCP toolbox  
 ✅ **Sensitive Data Masking** - Automatic credential protection
 
 ## Quick Start
@@ -44,14 +45,18 @@ adk_scaffold --help
 
 #### CLI Options
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--help` | `-h` | Show detailed usage information |
-| `--minimal` | `-m` | Create minimal setup without Docker files (excludes: Dockerfile, pyproject.toml, .dockerignore) |
+| Option            | Short | Description                                                                                     |
+| ----------------- | ----- | ----------------------------------------------------------------------------------------------- |
+| `--help`          | `-h`  | Show detailed usage information                                                                 |
+| `--minimal`       | `-m`  | Create minimal setup without Docker files (excludes: Dockerfile, pyproject.toml, .dockerignore) |
+| `--with-subagent` | `-s`  | Include database sub-agent example with MCP toolbox integration                                 |
 
 **Examples:**
+
 - `adk_scaffold rag_agent` - Creates a full agent with Docker support
 - `adk_scaffold rag_agent --minimal` - Creates agent without Docker files
+- `adk_scaffold rag_agent --with-subagent` - Creates agent with database sub-agent
+- `adk_scaffold rag_agent -s -m` - Minimal agent with sub-agent
 - `adk_scaffold rag_agent ~/projects/` - Creates agent in specific directory
 - `adk_scaffold rag_agent ~/projects/ -m` - Minimal agent in specific directory
 
@@ -87,20 +92,29 @@ my_agent/
 └── my_agent/
     ├── __init__.py          # Agent initialization
     ├── main.py              # FastAPI server with A2A
-    ├── config.py            # Pydantic settings
-    ├── prompts.py           # Agent instructions
-    ├── logging_config.py    # Logging configuration
     ├── .env.template        # Environment template
     ├── agent.json           # ADK agent metadata
+    ├── core/                # Configuration module
+    │   ├── __init__.py
+    │   ├── base_config.py   # Base configuration for inheritance
+    │   ├── config.py        # Pydantic settings
+    │   ├── prompts.py       # Agent instructions
+    │   └── logging_config.py
     └── agent/
         ├── __init__.py
         ├── agent.py         # Agent definition
+        ├── sub_agents/      # Sub-agents (with --with-subagent)
+        │   └── db_agent/    # Database sub-agent example
+        │       ├── __init__.py
+        │       ├── config.py
+        │       ├── prompts.py
+        │       └── agent.py
         └── tools/
             ├── __init__.py
             └── toolset.py   # Agent tools
 ```
 
-**Note:** When using `--minimal` flag, Dockerfile, pyproject.toml, and .dockerignore are excluded.
+**Note:** When using `--minimal` flag, Dockerfile, pyproject.toml, and .dockerignore are excluded. When using `--with-subagent` flag, the sub_agents/ directory structure is included.
 
 ## Configuration
 
@@ -159,7 +173,54 @@ class AgentConfig(BaseSettings):
 
 ### 3. Customize Prompts
 
-Edit `my_agent/prompts.py` for agent behavior and instructions.
+Edit `my_agent/core/prompts.py` for agent behavior and instructions.
+
+### 4. Add Sub-Agents (Optional)
+
+If you created your agent with `--with-subagent`, you'll have a database sub-agent example:
+
+**Configure the database sub-agent** in `my_agent/.env`:
+
+```bash
+# MCP Toolbox Configuration
+TOOLBOX_URL="http://localhost:9000"
+TOOLBOX_TOOLSET="my-toolset"
+
+# Optional overrides
+DB_AGENT_MODEL_ID="gemini-2.0-flash-exp"
+DB_AGENT_NAME="db_agent"
+```
+
+**Integrate with root agent** in `my_agent/agent/agent.py`:
+
+```python
+from my_agent.agent.sub_agents.db_agent.agent import db_agent
+
+root_agent = LlmAgent(
+    # ... existing config ...
+    sub_agents=[db_agent],  # Add database sub-agent
+)
+```
+
+**How sub-agents work:**
+
+- Sub-agents inherit base configuration from `core/base_config.py`
+- Each sub-agent has its own `config.py`, `prompts.py`, and `agent.py`
+- Sub-agents can have specialized tools (e.g., MCP toolbox for databases)
+- The root agent can delegate tasks to sub-agents
+
+**Create additional sub-agents:**
+
+Follow the same pattern as `db_agent`:
+
+```bash
+my_agent/agent/sub_agents/
+├── db_agent/          # Database operations
+├── api_agent/         # API interactions (your custom agent)
+└── search_agent/      # Web search (your custom agent)
+```
+
+Each sub-agent should inherit from `BaseAgentConfig` for shared settings.
 
 ## Docker Deployment
 
@@ -221,12 +282,14 @@ adk api_server .  # Start API server
 ## Observability
 
 Langfuse provides:
+
 - Complete execution traces
 - Performance metrics
 - Token usage and costs
 - Error tracking
 
 Enable in `my_agent/.env`:
+
 ```bash
 LANGFUSE_ENABLED="true"
 ```
@@ -234,26 +297,51 @@ LANGFUSE_ENABLED="true"
 ## Troubleshooting
 
 **Import Errors:**
+
 ```bash
 pip install -e .  # Run from agent root directory
 ```
 
 **Configuration Issues:**
+
 ```bash
 python -c "from my_agent.config import settings; print(settings.model_dump())"
 ```
 
 **Langfuse Connection:**
+
 ```bash
 python -c "from langfuse import Langfuse; print(Langfuse().auth_check())"
 ```
 
 ## Architecture
 
-- **Modular Design** - Clean separation of concerns
+- **Modular Design** - Clean separation of concerns with `core/` and `agent/` modules
+- **Configuration Inheritance** - Base configuration shared across main and sub-agents
 - **Type Safety** - Pydantic validation throughout
 - **Security First** - Credential masking, API auth
 - **Production Ready** - Health checks, monitoring, Docker
+- **Multi-Agent Support** - Optional sub-agents for specialized tasks
+
+### Configuration Architecture
+
+```
+BaseAgentConfig (core/base_config.py)
+├── Common settings: model_id, agent_name
+│
+├── AgentConfig (core/config.py)
+│   └── Main agent: database_url, tool settings
+│
+└── DbAgentConfig (agent/sub_agents/db_agent/config.py)
+    └── Sub-agent: toolbox_url, toolbox_toolset
+```
+
+**Benefits:**
+
+- Shared configuration reduces duplication
+- Sub-agents can override inherited settings
+- Environment variables provide flexible configuration
+- Type-safe with Pydantic validation
 
 ## Resources
 

@@ -36,13 +36,12 @@ Example:
     sub_agents=[specialist]
 """
 
-import os
-from google.adk.agents.llm_agent import LlmAgent
-from google.adk.models.lite_llm import LiteLlm
+from google.adk.agents import LlmAgent
 from google.adk.tools import FunctionTool
 
-from adk_agent.logging_config import setup_logging
-from adk_agent.config import settings
+from adk_agent.core.logging_config import setup_logging
+
+from adk_agent.agent.config import settings
 from adk_agent.agent.tools.toolset import agent_tools
 
 # Initialize logging
@@ -53,22 +52,16 @@ setup_logging()
 root_agent = LlmAgent(
     # Agent identification
     name=settings.agent_name,
-
-    # Model configuration - supports both direct model and LiteLLM proxy
-    # Set USE_LITELLM_PROXY=True in environment to use LiteLLM proxy
-    model=settings.model_id
-    if os.getenv("USE_LITELLM_PROXY") != "True"
-    else LiteLlm(settings.model_id),
-
+    # Model configuration - automatically handles LiteLLM proxy
+    # Uses settings.get_model() which checks USE_LITELLM_PROXY and openrouter/ prefix
+    model=settings.get_model(),
     # Agent behavior configuration from prompts
     description=settings.agent_description,
     instruction=settings.agent_instruction,
-
     # Tools and capabilities
     # TODO: Customize based on your agent requirements
     # Uncomment the line below when you add tools to toolset.py
     tools=[FunctionTool(func=tool) for tool in agent_tools],
-
     # Sub-agents for multi-agent workflows
     # TODO: Add sub-agents if needed for complex workflows
     # Example:

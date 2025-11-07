@@ -45,6 +45,9 @@ OPTIONS:
     -h, --help         Show this help message
     -m, --minimal      Create minimal setup without Docker files
                        (skips: Dockerfile, pyproject.toml, .dockerignore)
+    -s, --with-subagent
+                       Include database sub-agent example with MCP toolbox integration
+                       (creates: agent/sub_agents/db_agent/ structure)
 
 EXAMPLES:
     # Create full agent setup with Docker support
@@ -56,6 +59,13 @@ EXAMPLES:
     # Create minimal agent without Docker files
     adk_scaffold rag_agent --minimal
     adk_scaffold rag_agent -m
+
+    # Create agent with database sub-agent example
+    adk_scaffold rag_agent --with-subagent
+    adk_scaffold rag_agent -s
+
+    # Combine options: minimal setup with sub-agent
+    adk_scaffold rag_agent --minimal --with-subagent
 
     # Minimal agent in specific directory
     adk_scaffold rag_agent ~/projects/ --minimal
@@ -70,14 +80,23 @@ STRUCTURE CREATED:
     └── agent_name/
         ├── __init__.py          # Agent package init
         ├── main.py              # FastAPI server with A2A support
-        ├── config.py            # Pydantic configuration
-        ├── prompts.py           # Agent instructions
-        ├── logging_config.py    # Logging setup
         ├── .env.template        # Environment variables template
         ├── agent.json           # ADK agent metadata
+        ├── core/                # Configuration module
+        │   ├── __init__.py
+        │   ├── base_config.py   # Base configuration for inheritance
+        │   ├── config.py        # Main agent configuration
+        │   ├── prompts.py       # Agent instructions
+        │   └── logging_config.py
         └── agent/
             ├── __init__.py
             ├── agent.py         # Agent definition
+            ├── sub_agents/      # Sub-agents (with --with-subagent)
+            │   └── db_agent/    # Database sub-agent example
+            │       ├── __init__.py
+            │       ├── config.py
+            │       ├── prompts.py
+            │       └── agent.py
             └── tools/
                 ├── __init__.py
                 └── toolset.py   # Agent tools
@@ -92,6 +111,7 @@ adk_scaffold() {
     local agent_name=""
     local target_dir="."
     local minimal_mode=false
+    local with_subagent=false
 
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -102,6 +122,10 @@ adk_scaffold() {
                 ;;
             -m|--minimal)
                 minimal_mode=true
+                shift
+                ;;
+            -s|--with-subagent)
+                with_subagent=true
                 shift
                 ;;
             -*)
@@ -179,6 +203,12 @@ adk_scaffold() {
     else
         print_info "Mode: Full (with Docker support)"
     fi
+    
+    if [ "$with_subagent" = true ]; then
+        print_info "Sub-agents: Enabled (including db_agent example)"
+    else
+        print_info "Sub-agents: Disabled (use --with-subagent to include)"
+    fi
 
     # Create directory structure
     mkdir -p "$agent_root/$agent_name"
@@ -186,7 +216,18 @@ adk_scaffold() {
     # Copy template files
     if [ -d "$temp_dir/adk_agent" ]; then
         # Copy all files from adk_agent/ to agent_name/agent_name/
-        cp -r "$temp_dir/adk_agent/"* "$agent_root/$agent_name/"
+        # Copy all regular files and directories
+        cp -r "$temp_dir/adk_agent/"* "$agent_root/$agent_name/" 2>/dev/null || true
+        # Copy all hidden files (starting with .)
+        cp -r "$temp_dir/adk_agent/".* "$agent_root/$agent_name/" 2>/dev/null || true
+
+        # Remove sub_agents directory if --with-subagent is not specified
+        if [ "$with_subagent" = false ]; then
+            if [ -d "$agent_root/$agent_name/agent/sub_agents" ]; then
+                rm -rf "$agent_root/$agent_name/agent/sub_agents"
+                print_info "Skipped sub-agents (use --with-subagent to include)"
+            fi
+        fi
 
         # Copy root level files
         cp "$temp_dir/__init__.py" "$agent_root/"
@@ -215,6 +256,7 @@ Production-ready ADK agent created from the scaffold template.
 ✅ **Langfuse Integration** - Complete tracing and monitoring
 ✅ **Pydantic Config** - Type-safe settings with validation
 ✅ **A2A Protocol Support** - Agent-to-Agent communication
+$([ "$with_subagent" = true ] && echo "✅ **Sub-Agent Architecture** - Database sub-agent with MCP toolbox")
 $([ "$minimal_mode" = false ] && echo "✅ **Docker Ready** - Multi-stage builds with uv")
 
 ## Quick Start
@@ -278,15 +320,26 @@ $([ "$minimal_mode" = false ] && echo "├── .dockerignore")
 └── $agent_name/
     ├── __init__.py          # Agent initialization
     ├── main.py              # FastAPI server with A2A
-    ├── config.py            # Pydantic settings
-    ├── prompts.py           # Agent instructions
-    ├── logging_config.py    # Logging configuration
     ├── .env.template        # Environment template
     ├── agent.json           # ADK agent metadata
+    ├── core/                # Configuration module
+    │   ├── __init__.py
+    │   ├── base_config.py   # Base configuration for inheritance
+    │   ├── config.py        # Pydantic settings
+    │   ├── prompts.py       # Agent instructions
+    │   └── logging_config.py
     └── agent/
         ├── __init__.py
         ├── agent.py         # Agent definition
-        └── tools/
+$([ "$with_subagent" = true ] && cat << 'SUBEOF'
+        ├── sub_agents/      # Sub-agent implementations
+        │   └── db_agent/    # Database sub-agent (MCP toolbox)
+        │       ├── __init__.py
+        │       ├── config.py     # DB agent configuration
+        │       ├── prompts.py    # DB agent prompts
+        │       └── agent.py      # DB agent instance
+SUBEOF
+)        └── tools/
             ├── __init__.py
             └── toolset.py   # Agent tools
 \`\`\`
@@ -316,6 +369,35 @@ LANGFUSE_HOST="https://cloud.langfuse.com"
 # A2A Protocol
 ENABLE_A2A="true"
 \`\`\`
+
+$([ "$with_subagent" = true ] && cat << 'SUBAGENTCONFIGEOF'
+### Sub-Agent Configuration (Database Agent)
+
+The database sub-agent uses the MCP (Model Context Protocol) toolbox for data operations:
+
+\`\`\`bash
+# MCP Toolbox Configuration
+TOOLBOX_URL="http://localhost:9000"
+TOOLBOX_TOOLSET="my-toolset"
+
+# Optional: Override model for database sub-agent
+DB_AGENT_MODEL_ID="gemini-2.0-flash-exp"
+DB_AGENT_NAME="db_agent"
+\`\`\`
+
+To integrate the db_agent with your root agent, edit \`$agent_name/agent/agent.py\`:
+
+\`\`\`python
+from ${agent_name}.agent.sub_agents.db_agent.agent import db_agent
+
+root_agent = LlmAgent(
+    # ... other config ...
+    sub_agents=[db_agent],  # Add database sub-agent
+)
+\`\`\`
+
+SUBAGENTCONFIGEOF
+)
 
 ## Customization
 
@@ -448,14 +530,25 @@ READMEEOF
     echo "  └── $agent_name/"
     echo "      ├── __init__.py"
     echo "      ├── main.py"
-    echo "      ├── config.py"
-    echo "      ├── prompts.py"
-    echo "      ├── logging_config.py"
     echo "      ├── .env.template"
     echo "      ├── agent.json"
+    echo "      ├── core/"
+    echo "      │   ├── __init__.py"
+    echo "      │   ├── base_config.py"
+    echo "      │   ├── config.py"
+    echo "      │   ├── prompts.py"
+    echo "      │   └── logging_config.py"
     echo "      └── agent/"
     echo "          ├── __init__.py"
     echo "          ├── agent.py"
+    if [ "$with_subagent" = true ]; then
+        echo "          ├── sub_agents/"
+        echo "          │   └── db_agent/"
+        echo "          │       ├── __init__.py"
+        echo "          │       ├── config.py"
+        echo "          │       ├── prompts.py"
+        echo "          │       └── agent.py"
+    fi
     echo "          └── tools/"
     echo "              ├── __init__.py"
     echo "              └── toolset.py"
@@ -469,9 +562,15 @@ READMEEOF
     else
         echo "  4. Install dependencies (see README.md)"
     fi
-    echo "  5. Customize prompts.py for your agent's role"
+    echo "  5. Customize core/prompts.py for your agent's role"
     echo "  6. Add tools to agent/tools/toolset.py"
-    echo "  7. python -m $agent_name.main"
+    if [ "$with_subagent" = true ]; then
+        echo "  7. Configure MCP toolbox in .env (TOOLBOX_URL, TOOLBOX_TOOLSET)"
+        echo "  8. Integrate db_agent in agent/agent.py (see README)"
+        echo "  9. python -m $agent_name.main"
+    else
+        echo "  7. python -m $agent_name.main"
+    fi
     echo ""
     print_success "Happy coding! 🎉"
 }
