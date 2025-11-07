@@ -4,14 +4,14 @@ Production-ready template for Google ADK agents with observability, authenticati
 
 ## Features
 
-✅ **Production FastAPI Server** - Auth, observability, health checks, A2A support  
+✅ **Production FastAPI Server** - Auth, observability, health checks  
+✅ **Protocol Support** - A2A and AG-UI protocols out of the box  
+✅ **CopilotKit Integration** - Frontend-ready with AG-UI protocol  
 ✅ **Langfuse Integration** - Complete tracing and monitoring  
 ✅ **Pydantic Config** - Type-safe settings with validation  
 ✅ **Docker Ready** - Multi-stage builds with uv (optional)  
 ✅ **CLI Utility** - Quick scaffolding with `adk_scaffold` command  
-✅ **Flexible Setup** - Full or minimal mode with `--minimal` flag  
-✅ **Sub-Agent Architecture** - Optional database sub-agent with MCP toolbox  
-✅ **Sensitive Data Masking** - Automatic credential protection
+✅ **Sub-Agent Architecture** - Optional database sub-agent with MCP toolbox
 
 ## Quick Start
 
@@ -71,12 +71,29 @@ cp .env.template .env
 cd ../..
 uv sync
 
+```bash
 # Run with FastAPI (A2A enabled)
-python my_agent/main.py
+uvicorn my_agent.main:app --host 0.0.0.0 --port 8000
 
 # Or use ADK CLI (from parent directory)
 adk web .
 adk run .
+```
+
+## Protocol Support
+
+This template supports both **A2A** (Agent-to-Agent) and **AG-UI** (CopilotKit) protocols out of the box:
+
+### A2A Protocol
+- Enables agent-to-agent communication
+- Automatic endpoints at `/a2a/{agent_name}/`
+- Agent cards at `/a2a/{agent_name}/.well-known/agent-card.json`
+
+### AG-UI Protocol (CopilotKit)
+- Frontend integration ready at `/copilotkit`
+- Compatible with CopilotKit framework
+- Enable with `ENABLE_AG_UI="true"` in `.env`
+- [Learn more about AG-UI integration](https://docs.copilotkit.ai/adk/quickstart?path=exiting-agent)
 ```
 
 ## Project Structure
@@ -130,6 +147,9 @@ DATABASE_URL="sqlite:///:memory:"
 ```bash
 # API Authentication
 ADK_API_KEYS="sk-your-key-here"
+
+# Enable AG-UI Protocol (CopilotKit integration)
+ENABLE_AG_UI="true"
 
 # Langfuse Observability
 LANGFUSE_ENABLED="true"
@@ -247,7 +267,7 @@ docker run -p 8080:8080 --env-file my_agent/.env my-agent
 docker-compose up
 ```
 
-## API Usage
+### API Usage
 
 ### With Authentication
 
@@ -256,6 +276,13 @@ curl -H "X-API-KEY: your-key" \
      -H "Content-Type: application/json" \
      -d '{"message": "Hello"}' \
      http://localhost:8080/api/agents/my_agent
+```
+
+### AG-UI Endpoint
+
+```bash
+# CopilotKit integration endpoint (when ENABLE_AG_UI=true)
+POST http://localhost:8080/copilotkit
 ```
 
 ### Health Check
@@ -325,11 +352,11 @@ python -c "from langfuse import Langfuse; print(Langfuse().auth_check())"
 ## Architecture
 
 - **Modular Design** - Clean separation of concerns with `core/` and `agent/` modules
+- **Protocol Support** - A2A and AG-UI protocols for multi-agent and frontend integration
 - **Configuration Inheritance** - Base configuration shared across main and sub-agents
 - **Type Safety** - Pydantic validation throughout
 - **Security First** - Credential masking, API auth
 - **Production Ready** - Health checks, monitoring, Docker
-- **Multi-Agent Support** - Optional sub-agents for specialized tasks
 
 ### Configuration Architecture
 
@@ -354,6 +381,7 @@ BaseAgentConfig (core/base_config.py)
 ## Resources
 
 - [Google ADK Docs](https://google.github.io/adk-docs/)
+- [CopilotKit AG-UI Integration](https://docs.copilotkit.ai/adk/quickstart?path=exiting-agent)
 - [Langfuse Docs](https://langfuse.com/docs)
 - [LiteLLM Docs](https://docs.litellm.ai/)
 - [FastAPI Docs](https://fastapi.tiangolo.com/)

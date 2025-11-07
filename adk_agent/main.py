@@ -20,6 +20,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from google.adk.cli.fast_api import get_fast_api_app
+from google.adk.sessions import InMemorySessionService, DatabaseSessionService
+
+from ag_ui_adk import ADKAgent, add_adk_fastapi_endpoint
+from ag_ui.core import RunAgentInput
+
+from .agent import root_agent
 
 # Load environment variables from .env file
 load_dotenv()
@@ -47,6 +53,19 @@ def check_env_var_bool(var_name: str, default: Optional[str] = None) -> bool:
     return os.environ.get(var_name, _default).lower() in ("true", "1", "yes")
 
 
+# Utility function for extracting userID for AG-UI from request
+def extract_user_id(input_request: RunAgentInput) -> str:
+    """
+    Extract user ID from the RunAgentInput request.
+    This expects the UI which uses AG-UI protocol sends userId in forwarded_props.
+    """
+    # Extract from forwarded_props
+    user_id = getattr(input_request.forwarded_props, "userId", None)
+    if user_id:
+        return user_id
+    return f"thread_user_{input_request.thread_id}"
+
+
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
@@ -61,6 +80,9 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
 
 # A2A Configuration
 ENABLE_A2A = check_env_var_bool("ENABLE_A2A", "true")
+
+# Enabling copilotkit integration
+ENABLE_AG_UI = check_env_var_bool("ENABLE_AG_UI", "true")
 
 # Auto-convert legacy postgresql:// URL to modern postgresql+psycopg://
 # This ensures compatibility with psycopg (v3) installed in the container
@@ -195,6 +217,18 @@ adk_app: FastAPI = get_fast_api_app(
 )
 
 
+# Create app for copilotkit integration
+adk_copilotkit_agent = ADKAgent(
+    adk_agent=root_agent,
+    app_name=root_agent.name,
+    user_id_extractor=extract_user_id,
+    session_timeout_seconds=3600,
+    session_service=DatabaseSessionService(DATABASE_URL)
+    if DATABASE_URL
+    else InMemorySessionService(),
+)
+
+
 # =============================================================================
 # CORS MIDDLEWARE
 # =============================================================================
@@ -234,6 +268,13 @@ def health_check():
 # This includes all ADK endpoints and A2A protocol endpoints
 # A2A endpoints are automatically created at /a2a/{agent_name}/ for each agent
 app.mount("/", adk_app)
+
+# =============================================================================
+#  conditional CopilotKit integration
+# =============================================================================
+if ENABLE_AG_UI:
+    print("✅ CopilotKit integration enabled at /copilotkit")
+    add_adk_fastapi_endpoint(app, adk_copilotkit_agent, path="/copilotkit")
 
 
 # =============================================================================
@@ -316,7 +357,11 @@ def custom_openapi():
     openapi_schema["info"]["title"] = f"{adk_app.title} with A2A Protocol"
     openapi_schema["info"]["description"] = (
         f"{adk_app.description}\n\n"
-        f"## A2A Protocol Support {'enabled' if ENABLE_A2A else 'disabled'}\n\n"
+        f"### A2A Protocol Support {'enabled' if ENABLE_A2A else 'disabled'}\n\n"
+        f"### CopilotKit Integration {'enabled at /copilotkit' if ENABLE_AG_UI else 'disabled'}\n\n"
+        f"#### A2A Agent card will be available for each agent at /a2a/<agent_id>/.well-known/agent-card.json\n\n"
+        if ENABLE_A2A
+        else ""
     )
 
     # Merge main app routes (like /health)
