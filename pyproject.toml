@@ -20,7 +20,7 @@ dependencies = [
     "fastapi>=0.104.0",
     "uvicorn>=0.24.0",
     # AG-UI integration
-    #"ag-ui-adk>=0.3.2",
+    "ag-ui-adk>=0.3.2",
     # MCP toolbox client integration
     #"toolbox-core>=0.5.2",
 ]
