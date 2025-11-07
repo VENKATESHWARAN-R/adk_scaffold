@@ -64,11 +64,11 @@ class DbAgentConfig(BaseAgentConfig):
     # --> Override Base Settings for DB Agent
     # Override model_id with db_agent specific default (can still be overridden via env)
     model_id: str = Field(
-        default="gemini-2.0-flash-exp", description="LLM model identifier for db_agent"
+        default="gemini-2.5-flash-lite", description="LLM model identifier for db_agent"
     )
 
     # Override agent_name with db_agent specific default
-    agent_name: str = Field(
+    db_agent_name: str = Field(
         default="db_agent", description="Name of the database agent instance"
     )
     # <-- End of Override Base Settings

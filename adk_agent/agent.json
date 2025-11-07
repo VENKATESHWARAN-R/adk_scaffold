@@ -5,7 +5,7 @@
     "organization": "Example Corp",
     "url": "https://example.com"
   },
-  "url": "http://localhost:8000/a2a/app",
+  "url": "http://localhost:8000/a2a/adk_agent",
   "version": "1.0.0",
   "protocol_version": "0.3.0",
   "preferred_transport": "JSONRPC",

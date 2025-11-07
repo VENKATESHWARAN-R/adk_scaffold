@@ -87,8 +87,8 @@ class DbAgent(BaseAgent):
     toolbox_url: str
     toolbox_toolset: str
     model_id: Union[str, LiteLlm]
-    agent_instruction: callable
-    agent_description: str
+    instruction: callable
+    description: str
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -98,8 +98,8 @@ class DbAgent(BaseAgent):
         toolbox_url: str,
         toolbox_toolset: str,
         model_id: Union[str, LiteLlm],
-        agent_instruction: callable,
-        agent_description: str,
+        instruction: callable,
+        description: str,
         **kwargs,
     ):
         """
@@ -119,8 +119,8 @@ class DbAgent(BaseAgent):
             toolbox_url=toolbox_url,
             toolbox_toolset=toolbox_toolset,
             model_id=model_id,
-            agent_instruction=agent_instruction,
-            agent_description=agent_description,
+            instruction=instruction,
+            description=description,
             sub_agents=[],  # This is a leaf agent - no sub-agents
             **kwargs,
         )
@@ -176,10 +176,10 @@ class DbAgent(BaseAgent):
                 inner_agent = LlmAgent(
                     name=self.name,
                     model=self.model_id,
-                    instruction=self.agent_instruction(
+                    instruction=self.instruction(
                         ctx
                     ),  # Call with context for dynamic instruction
-                    description=self.agent_description,
+                    description=self.description,
                     tools=[FunctionTool(func=tool) for tool in toolbox_tools],
                     sub_agents=[],
                 )
@@ -223,10 +223,10 @@ class DbAgent(BaseAgent):
 # Create the db_agent instance with MCP Toolbox configuration
 # This instance can be imported and used as a sub-agent of the root agent
 db_agent = DbAgent(
-    name=db_settings.agent_name,
-    toolbox_url=db_settings.toolbox_url,  # Extract SecretStr value
+    name=db_settings.db_agent_name,
+    toolbox_url=db_settings.toolbox_url,
     toolbox_toolset=db_settings.toolbox_toolset,
     model_id=db_settings.get_model(),
-    agent_instruction=db_settings.agent_instruction,
-    agent_description=db_settings.agent_description,
+    instruction=db_settings.agent_instruction,
+    description=db_settings.agent_description,
 )

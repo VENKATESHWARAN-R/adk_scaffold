@@ -381,7 +381,7 @@ TOOLBOX_URL="http://localhost:9000"
 TOOLBOX_TOOLSET="my-toolset"
 
 # Optional: Override model for database sub-agent
-DB_AGENT_MODEL_ID="gemini-2.0-flash-exp"
+DB_AGENT_MODEL_ID="gemini-2.5-flash-lite"
 DB_AGENT_NAME="db_agent"
 \`\`\`
 

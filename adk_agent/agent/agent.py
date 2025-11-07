@@ -37,12 +37,15 @@ Example:
 """
 
 from google.adk.agents import LlmAgent
-from google.adk.tools import FunctionTool
+# from google.adk.tools import FunctionTool, AgentTool
 
 from adk_agent.core.logging_config import setup_logging
 
 from adk_agent.agent.config import settings
-from adk_agent.agent.tools.toolset import agent_tools
+# from adk_agent.agent.tools.toolset import agent_tools
+
+# Import sub-agents here if needed
+# from adk_agent.agent.sub_agents.db_agent.agent import db_agent
 
 # Initialize logging
 setup_logging()
@@ -60,8 +63,11 @@ root_agent = LlmAgent(
     instruction=settings.agent_instruction,
     # Tools and capabilities
     # TODO: Customize based on your agent requirements
+    # If Using sub-agents as tools, uncomment the line below
+    # tools=[AgentTool(agent=db_agent)],
     # Uncomment the line below when you add tools to toolset.py
-    tools=[FunctionTool(func=tool) for tool in agent_tools],
+    # tools=[FunctionTool(func=tool) for tool in agent_tools],
+    tools=[],
     # Sub-agents for multi-agent workflows
     # TODO: Add sub-agents if needed for complex workflows
     # Example:

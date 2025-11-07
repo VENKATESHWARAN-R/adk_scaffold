@@ -68,12 +68,11 @@ cp .env.template .env
 # Edit .env with your settings (MODEL_ID, etc.)
 
 # Install dependencies (from parent directory)
-cd ..
-pip install -e .
-# or: uv pip install -e .
+cd ../..
+uv sync
 
 # Run with FastAPI (A2A enabled)
-python -m my_agent.main
+python my_agent/main.py
 
 # Or use ADK CLI (from parent directory)
 adk web .
@@ -97,12 +96,12 @@ my_agent/
     ├── core/                # Configuration module
     │   ├── __init__.py
     │   ├── base_config.py   # Base configuration for inheritance
-    │   ├── config.py        # Pydantic settings
-    │   ├── prompts.py       # Agent instructions
     │   └── logging_config.py
     └── agent/
         ├── __init__.py
         ├── agent.py         # Agent definition
+        ├── config.py        # Pydantic settings
+        ├── prompts.py       # Agent instructions
         ├── sub_agents/      # Sub-agents (with --with-subagent)
         │   └── db_agent/    # Database sub-agent example
         │       ├── __init__.py
@@ -143,7 +142,18 @@ LANGFUSE_HOST="https://cloud.langfuse.com"
 
 ```bash
 USE_LITELLM_PROXY="True"
-MODEL_ID="gpt-4o-mini"  # Any LiteLLM-supported model
+MODEL_ID="grok-code-fast-1"  # Any LiteLLM-supported model
+LITELLM_PROXY_API_BASE="http://localhost:4000"
+LITELLM_API_KEY="your-litellm-api-key"
+```
+
+### OpenRouter settings
+
+```bash
+USE_LITELLM_PROXY="False"
+MODEL_ID="openrouter/x-ai/grok-code-fast-1"
+OPENROUTER_API_KEY="your-openrouter-api-key"
+LITELLM_PROXY_API_BASE=https://openrouter.ai/api/v1
 ```
 
 ## Customization
@@ -162,7 +172,7 @@ agent_tools = [search_web]
 
 ### 2. Configure Settings
 
-Edit `my_agent/config.py`:
+Edit `my_agent/agent/config.py`:
 
 ```python
 class AgentConfig(BaseSettings):
@@ -173,7 +183,7 @@ class AgentConfig(BaseSettings):
 
 ### 3. Customize Prompts
 
-Edit `my_agent/core/prompts.py` for agent behavior and instructions.
+Edit `my_agent/agent/prompts.py` for agent behavior and instructions.
 
 ### 4. Add Sub-Agents (Optional)
 
@@ -187,7 +197,7 @@ TOOLBOX_URL="http://localhost:9000"
 TOOLBOX_TOOLSET="my-toolset"
 
 # Optional overrides
-DB_AGENT_MODEL_ID="gemini-2.0-flash-exp"
+DB_AGENT_MODEL_ID="gemini-2.5-flash-lite"
 DB_AGENT_NAME="db_agent"
 ```
 
@@ -258,15 +268,13 @@ curl http://localhost:8080/health
 
 ```bash
 # Install dev dependencies (full mode only)
-pip install -e ".[dev]"
+uv sync --dev
 
 # Code quality
 black .
 ruff check .
 mypy .
 
-# Run tests
-pytest
 ```
 
 ## ADK CLI Commands
@@ -329,7 +337,7 @@ python -c "from langfuse import Langfuse; print(Langfuse().auth_check())"
 BaseAgentConfig (core/base_config.py)
 ├── Common settings: model_id, agent_name
 │
-├── AgentConfig (core/config.py)
+├── AgentConfig (agent/config.py)
 │   └── Main agent: database_url, tool settings
 │
 └── DbAgentConfig (agent/sub_agents/db_agent/config.py)
@@ -345,7 +353,7 @@ BaseAgentConfig (core/base_config.py)
 
 ## Resources
 
-- [Google ADK Docs](https://cloud.google.com/vertex-ai/docs/adk)
+- [Google ADK Docs](https://google.github.io/adk-docs/)
 - [Langfuse Docs](https://langfuse.com/docs)
 - [LiteLLM Docs](https://docs.litellm.ai/)
 - [FastAPI Docs](https://fastapi.tiangolo.com/)

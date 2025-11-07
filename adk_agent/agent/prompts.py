@@ -169,7 +169,11 @@ def get_agent_instruction(context: ReadonlyContext) -> str:
 
     # Check if user information exists
     user_information = str(context.session.state.get("user_information"))
-    if user_information:
+    if (
+        user_information is not None
+        and user_information.strip() != ""
+        and user_information.strip().lower() != "none"
+    ):
         configured_instruction += "\n\nUser Information:\n" + user_information
 
     configured_instruction += (

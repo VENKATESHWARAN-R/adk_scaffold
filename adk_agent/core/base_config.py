@@ -50,8 +50,8 @@ class BaseAgentConfig(BaseSettings):
     # These settings are typically shared across all agents
 
     model_id: str = Field(
-        default="gemini-2.0-flash-exp",
-        description="LLM model identifier (e.g., gemini-2.0-flash-exp, gpt-4, claude-3)",
+        default="gemini-2.5-flash-lite",
+        description="LLM model identifier (e.g., gemini-2.5-flash-lite, gpt-4, claude-3)",
     )
 
     agent_name: str = Field(default="agent", description="Name of the agent instance")
