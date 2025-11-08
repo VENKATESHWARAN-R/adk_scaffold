@@ -25,7 +25,6 @@ from google.adk.sessions import InMemorySessionService, DatabaseSessionService
 from ag_ui_adk import ADKAgent, add_adk_fastapi_endpoint
 from ag_ui.core import RunAgentInput
 
-from .agent import root_agent
 
 # Load environment variables from .env file
 load_dotenv()
@@ -81,7 +80,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
 # A2A Configuration
 ENABLE_A2A = check_env_var_bool("ENABLE_A2A", "true")
 
-# Enabling copilotkit integration
+# Enabling AG-UI integration
 ENABLE_AG_UI = check_env_var_bool("ENABLE_AG_UI", "true")
 
 # Auto-convert legacy postgresql:// URL to modern postgresql+psycopg://
@@ -217,18 +216,6 @@ adk_app: FastAPI = get_fast_api_app(
 )
 
 
-# Create app for copilotkit integration
-adk_copilotkit_agent = ADKAgent(
-    adk_agent=root_agent,
-    app_name=root_agent.name,
-    user_id_extractor=extract_user_id,
-    session_timeout_seconds=3600,
-    session_service=DatabaseSessionService(DATABASE_URL)
-    if DATABASE_URL
-    else InMemorySessionService(),
-)
-
-
 # =============================================================================
 # CORS MIDDLEWARE
 # =============================================================================
@@ -270,11 +257,24 @@ def health_check():
 app.mount("/", adk_app)
 
 # =============================================================================
-#  conditional CopilotKit integration
+#  conditional AG-UI integration
 # =============================================================================
+
 if ENABLE_AG_UI:
-    print("✅ CopilotKit integration enabled at /copilotkit")
-    add_adk_fastapi_endpoint(app, adk_copilotkit_agent, path="/copilotkit")
+    from .agent import root_agent
+    # Create app for ag-ui integration
+    adk_agent_ag_ui = ADKAgent(
+        adk_agent=root_agent,
+        app_name=root_agent.name,
+        user_id_extractor=extract_user_id,
+        session_timeout_seconds=3600,
+        session_service=DatabaseSessionService(DATABASE_URL)
+        if DATABASE_URL
+        else InMemorySessionService(),
+    )
+    agent_name = root_agent.name.lower().replace(" ", "-").replace("_", "-")
+    print(f"✅ AG-UI integration enabled at /ag-ui/{agent_name}")
+    add_adk_fastapi_endpoint(app, adk_agent_ag_ui, path=f"/ag-ui/{agent_name}")
 
 
 # =============================================================================
@@ -358,7 +358,7 @@ def custom_openapi():
     openapi_schema["info"]["description"] = (
         f"{adk_app.description}\n\n"
         f"### A2A Protocol Support {'enabled' if ENABLE_A2A else 'disabled'}\n\n"
-        f"### CopilotKit Integration {'enabled at /copilotkit' if ENABLE_AG_UI else 'disabled'}\n\n"
+        f"### AG-UI Integration {'enabled at /ag-ui/<agent-id>' if ENABLE_AG_UI else 'disabled'}\n\n"
         f"#### A2A Agent card will be available for each agent at /a2a/<agent_id>/.well-known/agent-card.json\n\n"
         if ENABLE_A2A
         else ""

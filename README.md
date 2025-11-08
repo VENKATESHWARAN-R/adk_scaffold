@@ -91,7 +91,7 @@ This template supports both **A2A** (Agent-to-Agent) and **AG-UI** (CopilotKit) 
 
 ### AG-UI Protocol (CopilotKit)
 
-- Frontend integration ready at `/copilotkit`
+- Frontend integration ready at `/ag-ui/<agent-id>`
 - Compatible with CopilotKit framework
 - Enable with `ENABLE_AG_UI="true"` in `.env`
 - [Learn more about AG-UI integration](https://docs.copilotkit.ai/adk/quickstart?path=exiting-agent)
@@ -148,7 +148,7 @@ DATABASE_URL="sqlite:///:memory:"
 # API Authentication
 ADK_API_KEYS="sk-your-key-here"
 
-# Enable AG-UI Protocol (CopilotKit integration)
+# Enable AG-UI Protocol
 ENABLE_AG_UI="true"
 
 # Langfuse Observability
@@ -269,20 +269,11 @@ docker-compose up
 
 ## API Usage
 
-### With Authentication
-
-```bash
-curl -H "X-API-KEY: your-key" \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Hello"}' \
-     http://localhost:8080/api/agents/my_agent
-```
-
 ### AG-UI Endpoint
 
 ```bash
 # CopilotKit integration endpoint (when ENABLE_AG_UI=true)
-POST http://localhost:8080/copilotkit
+POST http://localhost:8080/ag-ui/my-agent
 ```
 
 ### Health Check
@@ -380,7 +371,7 @@ BaseAgentConfig (core/base_config.py)
 ## Resources
 
 - [Google ADK Docs](https://google.github.io/adk-docs/)
-- [CopilotKit AG-UI Integration](https://docs.copilotkit.ai/adk/quickstart?path=exiting-agent)
+- [AG-UI Integration](https://docs.copilotkit.ai/adk/quickstart?path=exiting-agent)
 - [Langfuse Docs](https://langfuse.com/docs)
 - [LiteLLM Docs](https://docs.litellm.ai/)
 - [FastAPI Docs](https://fastapi.tiangolo.com/)
